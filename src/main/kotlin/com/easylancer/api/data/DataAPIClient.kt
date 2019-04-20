@@ -1,7 +1,8 @@
-package com.easylancer.api
+package com.easylancer.api.data
 
-import com.easylancer.api.DataApiResponseDTO
-import com.easylancer.api.TaskDTO
+import com.easylancer.api.data.dto.FullTaskDTO
+import com.easylancer.api.data.dto.TaskDTO
+import com.easylancer.api.dto.CreateTaskDTO
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -28,16 +29,40 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
         return restTemplate.postForEntity(url, data)
     }
 
-    suspend fun getTask(id: String): TaskDTO  {
-        val respNode = get("/tasks/${id}")
+    suspend fun getTaskAsync(id: String): Deferred<FullTaskDTO> = coroutineScope {
+        try {
+            async {
+                val respNode =  get("/tasks/${id}/view")
 
-        return mapper.treeToValue(respNode.get("data"), TaskDTO::class.java)
+                mapper.treeToValue(respNode.get("data"), FullTaskDTO::class.java)
+            }
+        } catch (e: Exception) {
+            throw DataApiException("Unexpected API response: ${e.message}");
+        }
     }
 
-    suspend fun taskSeenBy(id: String, userId: String): List<String> {
+    suspend fun postTaskAsync(userId: String, task: CreateTaskDTO): Deferred<TaskDTO> = coroutineScope {
         try {
-            val responseEntity = post("/tasks/$id/seenBy/$userId")
-            val responseBody = responseEntity.body;
+            async {
+                val taskBody = mapper.valueToTree<ObjectNode>(task);
+
+                taskBody.put("creatorUser", userId);
+                val responseBody = post("/tasks", taskBody).body
+
+                if (responseBody != null) {
+                    mapper.convertValue(responseBody.get("data"), TaskDTO::class.java)
+                } else {
+                    throw DataApiException("Empty body response")
+                }
+            }
+        } catch (e: Exception) {
+            throw DataApiException("Unexpected API response: ${e.message}");
+        }
+    }
+
+    fun taskSeenBy(id: String, userId: String): List<String> {
+        try {
+            val responseBody = post("/tasks/$id/seenBy/$userId").body
 
             if (responseBody != null) {
                 return responseBody.get("data").map{ it.textValue()}

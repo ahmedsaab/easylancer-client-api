@@ -7,7 +7,8 @@ import org.springframework.http.HttpHeaders
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
 
-import com.easylancer.api.DataAPIClient
+import com.easylancer.api.data.DataAPIClient
+import com.easylancer.api.data.EventEmitter
 
 @Configuration
 class Config {
@@ -23,7 +24,11 @@ class Config {
                 .build()
     }
     @Bean
-    fun dataApiClient(builder: RestTemplateBuilder): DataAPIClient {
-        return DataAPIClient(restTemplate(builder))
+    fun dataApiClient(restTemplate: RestTemplate): DataAPIClient {
+        return DataAPIClient(restTemplate)
+    }
+    @Bean
+    fun eventEmitter(dataApiClient: DataAPIClient): EventEmitter {
+        return EventEmitter(dataApiClient)
     }
 }

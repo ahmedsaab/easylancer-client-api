@@ -1,4 +1,4 @@
-package com.easylancer.api
+package com.easylancer.api.controllers
 
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model

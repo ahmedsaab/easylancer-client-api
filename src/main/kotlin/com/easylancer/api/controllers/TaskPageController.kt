@@ -3,10 +3,8 @@ package com.easylancer.api.controllers
 import com.easylancer.api.data.DataAPIClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.FullTaskDTO
-import com.easylancer.api.dto.CreateTaskDTO
-import com.easylancer.api.dto.IdDTO
-import com.easylancer.api.dto.ViewTaskDTO
-import com.fasterxml.jackson.databind.JsonNode
+import com.easylancer.api.data.dto.TaskDTO
+import com.easylancer.api.dto.*
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 
@@ -14,13 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import java.text.SimpleDateFormat
-import java.text.DateFormat
-import java.util.*
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
-
 
 
 @RequestMapping("/tasks")
@@ -30,10 +21,10 @@ class TaskPageController(
         @Autowired private val eventEmitter: EventEmitter,
         @Autowired private val dataClient: DataAPIClient
 ) {
-    private val currentUserId = "5cb1ef55e83e494919135d9f"
+    private val currentUserId = "5cb21c90d70d4f0548b09775"
 
     @GetMapping("/{id}/view")
-    suspend fun viewTask(@PathVariable("id") id: String) : ViewTaskDTO {
+    suspend fun viewTask(@PathVariable("id") id: String) : DetailViewTaskDTO {
         val task: FullTaskDTO = dataClient.getTaskAsync(id).await()
         eventEmitter.taskSeenByUser(id, currentUserId)
 
@@ -46,8 +37,49 @@ class TaskPageController(
         }
     }
 
+    @GetMapping("/view")
+    suspend fun viewAllTasks() : List<ListViewTaskDTO> {
+        val tasks: Array<TaskDTO> = dataClient.getAllTasksAsync().await();
+
+        return tasks.map { it.toListViewTaskDTO() }
+    }
+
     @PostMapping("/create")
     suspend fun createTask(@RequestBody taskBody: CreateTaskDTO) : IdDTO {
+        val task: TaskDTO = dataClient.postTaskAsync(currentUserId, taskBody).await()
+
+        return task.toIdDTO();
+    }
+
+    @PutMapping("/{id}/edit")
+    suspend fun updateTask(
+            @PathVariable("id") id: String,
+            @RequestBody taskBody: UpdateTaskDTO
+    ) : IdDTO {
+        dataClient.putTaskAsync(id, currentUserId, taskBody).await()
+
+        return IdDTO(id);
+    }
+
+    @PostMapping("/{id}/apply")
+    suspend fun applyToTask(
+            @PathVariable("id") id: String,
+            @RequestBody offerBody: CreateOfferDTO
+    ) : IdDTO {
+        val offer = dataClient.postOfferAsync(currentUserId, id, offerBody).await()
+
+        return offer.toIdDTO();
+    }
+
+    @PostMapping("/{id}/review")
+    suspend fun reviewTask(@RequestBody taskBody: CreateTaskDTO) : IdDTO {
+        val task = dataClient.postTaskAsync(currentUserId, taskBody).await()
+
+        return task.toIdDTO();
+    }
+
+    @PostMapping("/{id}/cancel")
+    suspend fun cancelTask(@RequestBody taskBody: CreateTaskDTO) : IdDTO {
         val task = dataClient.postTaskAsync(currentUserId, taskBody).await()
 
         return task.toIdDTO();

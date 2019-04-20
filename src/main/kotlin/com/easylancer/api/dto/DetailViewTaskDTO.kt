@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.*
 
 @JsonPropertyOrder(alphabetic=true)
-data class ViewTaskDTO(
+data class DetailViewTaskDTO(
     val category: String,
     val type: String,
     val paymentMethod: String,

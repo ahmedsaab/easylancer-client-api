@@ -1,6 +1,7 @@
 package com.easylancer.api.data.dto
 
 import com.easylancer.api.dto.IdDTO
+import com.easylancer.api.dto.ListViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.*
 
@@ -33,5 +34,18 @@ data class TaskDTO(
 ) {
     fun toIdDTO() = IdDTO(
         id = _id
+    )
+    fun toListViewTaskDTO() = ListViewTaskDTO(
+        category = category,
+        type = type,
+        paymentMethod = paymentMethod,
+        title = title,
+        price = price,
+        endDateTime = endDateTime,
+        status = status,
+        id = _id,
+        startDateTime = startDateTime,
+        location = location,
+        createdAt = createdAt
     )
 }

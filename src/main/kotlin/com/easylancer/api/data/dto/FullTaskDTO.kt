@@ -1,11 +1,7 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.dto.ViewTaskDTO
+import com.easylancer.api.dto.DetailViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.*
 
 /**
@@ -37,7 +33,7 @@ data class FullTaskDTO(
     val location: TaskLocationDTO,
     val createdAt: Date
 ) {
-    fun toOwnerViewTaskDTO() = ViewTaskDTO(
+    fun toOwnerViewTaskDTO() = DetailViewTaskDTO(
         category = category,
         type = type,
         paymentMethod = paymentMethod,
@@ -59,7 +55,7 @@ data class FullTaskDTO(
         createdAt = createdAt
     )
 
-    fun toWorkerViewTaskDTO() = ViewTaskDTO(
+    fun toWorkerViewTaskDTO() = DetailViewTaskDTO(
         category = category,
         type = type,
         paymentMethod = paymentMethod,
@@ -81,7 +77,7 @@ data class FullTaskDTO(
         createdAt = createdAt
     )
 
-    fun toViewerViewTaskDTO() = ViewTaskDTO(
+    fun toViewerViewTaskDTO() = DetailViewTaskDTO(
         category = category,
         type = type,
         paymentMethod = paymentMethod,

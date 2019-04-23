@@ -1,10 +1,8 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.dto.IdDTO
-import com.easylancer.api.dto.ListViewTaskDTO
+import com.easylancer.api.dto.IdViewDTO
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import java.util.*
 
 /**
  * Representation of a Task
@@ -24,7 +22,7 @@ data class OfferDTO(
     @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
     val price: Int
 ) {
-    fun toIdDTO() = IdDTO(
+    fun toIdDTO() = IdViewDTO(
         id = _id
     )
 }

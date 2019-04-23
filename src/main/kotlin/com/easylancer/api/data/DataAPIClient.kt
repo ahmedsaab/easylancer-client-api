@@ -1,5 +1,6 @@
 package com.easylancer.api.data
 
+import com.easylancer.api.data.dto.FullOfferDTO
 import com.easylancer.api.data.dto.FullTaskDTO
 import com.easylancer.api.data.dto.OfferDTO
 import com.easylancer.api.data.dto.TaskDTO
@@ -75,6 +76,19 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
                 val dataArray = respNode.get("data")
 
                 mapper.treeToValue(dataArray, Array<TaskDTO>::class.java)
+            } catch (e: Exception) {
+                throw DataApiException("Client API function failed: ${e.message}");
+            }
+        }
+    }
+
+    suspend fun getTaskOffersAsync(id: String): Deferred<Array<FullOfferDTO>> = coroutineScope {
+        async {
+            try {
+                val respNode = get("/tasks/$id/offers")
+                val dataArray = respNode.get("data")
+
+                mapper.treeToValue(dataArray, Array<FullOfferDTO>::class.java)
             } catch (e: Exception) {
                 throw DataApiException("Client API function failed: ${e.message}");
             }

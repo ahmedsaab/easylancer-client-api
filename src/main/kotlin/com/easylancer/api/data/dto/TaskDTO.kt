@@ -1,6 +1,6 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.dto.IdDTO
+import com.easylancer.api.dto.IdViewDTO
 import com.easylancer.api.dto.ListViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.*
@@ -32,7 +32,7 @@ data class TaskDTO(
     val location: TaskLocationDTO,
     val createdAt: Date
 ) {
-    fun toIdDTO() = IdDTO(
+    fun toIdDTO() = IdViewDTO(
         id = _id
     )
     fun toListViewTaskDTO() = ListViewTaskDTO(

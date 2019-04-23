@@ -1,5 +1,5 @@
 package com.easylancer.api.dto
 
-data class IdDTO(
+data class IdViewDTO(
     val id: String
 )

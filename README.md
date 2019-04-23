@@ -2,12 +2,12 @@
 
 This is the API that will be used to serve the mobile app of Easylancer. It is the entry point for user driven actions and events and it utilizes other microservices like the data api, search api, payment api, etc.
 
-##Search Page:
+## Search Page:
 Page that shows some tasks that the user is interested in as well as the ability to search and filter all tasks open.
 
 - **GET /search/all** -> Fetches summary for all tasks
 
-##Task Page:
+## Task Page:
 Page that shows the detailed view of a specific task as well as the actions the user can make on it
 
 - **POST /tasks/create** -> Creates a new task for the logged in user

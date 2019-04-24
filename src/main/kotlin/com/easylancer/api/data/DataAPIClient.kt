@@ -1,9 +1,6 @@
 package com.easylancer.api.data
 
-import com.easylancer.api.data.dto.FullOfferDTO
-import com.easylancer.api.data.dto.FullTaskDTO
-import com.easylancer.api.data.dto.OfferDTO
-import com.easylancer.api.data.dto.TaskDTO
+import com.easylancer.api.data.dto.*
 import com.easylancer.api.dto.CreateOfferDTO
 import com.easylancer.api.dto.CreateTaskDTO
 import com.easylancer.api.dto.UpdateTaskDTO
@@ -53,9 +50,19 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
     fun getTask(id: String): TaskDTO {
         try {
-            val dataArray = get("/tasks/$id").get("data")
+            val data = get("/tasks/$id").get("data")
 
-            return mapper.treeToValue(dataArray, TaskDTO::class.java)
+            return mapper.treeToValue(data, TaskDTO::class.java)
+        } catch (e: Exception) {
+            throw DataApiException("Client API function failed: ${e.message}");
+        }
+    }
+
+    fun getUser(id: String): UserDTO {
+        try {
+            val data = get("/users/$id").get("data")
+
+            return mapper.treeToValue(data, UserDTO::class.java)
         } catch (e: Exception) {
             throw DataApiException("Client API function failed: ${e.message}");
         }
@@ -67,6 +74,39 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
             val dataArray = respNode.get("data")
 
             return mapper.treeToValue(dataArray, Array<TaskDTO>::class.java)
+        } catch (e: Exception) {
+            throw DataApiException("Client API function failed: ${e.message}");
+        }
+    }
+
+    fun getUserFinishedTasks(id: String): Array<TaskDTO> {
+        try {
+            val respNode = get("/users/$id/tasks/finished")
+            val dataArray = respNode.get("data")
+
+            return mapper.treeToValue(dataArray, Array<TaskDTO>::class.java)
+        } catch (e: Exception) {
+            throw DataApiException("Client API function failed: ${e.message}");
+        }
+    }
+
+    fun getUserCreatedTasks(id: String): Array<TaskDTO> {
+        try {
+            val respNode = get("/users/$id/tasks/created")
+            val dataArray = respNode.get("data")
+
+            return mapper.treeToValue(dataArray, Array<TaskDTO>::class.java)
+        } catch (e: Exception) {
+            throw DataApiException("Client API function failed: ${e.message}");
+        }
+    }
+
+    fun getUserReviews(id: String): Array<FullTaskRatingDTO> {
+        try {
+            val respNode = get("/users/$id/reviews")
+            val dataArray = respNode.get("data")
+
+            return mapper.treeToValue(dataArray, Array<FullTaskRatingDTO>::class.java)
         } catch (e: Exception) {
             throw DataApiException("Client API function failed: ${e.message}");
         }
@@ -105,6 +145,14 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
         }
     }
 
+    fun putUser(userId: String, user: ObjectNode) {
+        try {
+            put("/users/$userId", user)
+        } catch (e: Exception) {
+            throw DataApiException("Client API function failed: ${e.message}");
+        }
+    }
+
     fun postOffer(taskId: String, offer: ObjectNode): OfferDTO {
         try {
             val responseBody = post("/tasks/$taskId/offers", offer).body
@@ -132,8 +180,4 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
             throw DataApiException("Client API function failed: ${e.message}");
         }
     }
-}
-
-class DataApiException(message: String): Exception(message) {
-
 }

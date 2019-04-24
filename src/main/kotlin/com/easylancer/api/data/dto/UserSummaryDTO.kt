@@ -1,5 +1,7 @@
 package com.easylancer.api.data.dto
 
+import com.easylancer.api.dto.DetailViewTaskDTO
+import com.easylancer.api.dto.UserSummaryViewDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -12,4 +14,15 @@ data class UserSummaryDTO(
         val isApproved: Boolean,
         val _id: String,
         val badges: Array<UserBadgeDTO>
-)
+) {
+    fun toUserSummaryViewDTO() = UserSummaryViewDTO(
+            firstName = firstName,
+            lastName = lastName,
+            imageUrl = imageUrl,
+            dislikes = dislikes,
+            likes = likes,
+            isApproved = isApproved,
+            id = _id,
+            badges = badges
+    )
+}

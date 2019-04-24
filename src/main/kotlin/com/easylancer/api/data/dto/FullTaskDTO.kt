@@ -4,13 +4,6 @@ import com.easylancer.api.dto.DetailViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.*
 
-/**
- * Representation of a Task
- * @property username The username of the user
- * @property screenName The screen name of the user
- * @property email The email address of the user
- * @property registered When the user registered with us
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FullTaskDTO(
     val category: String,
@@ -39,8 +32,8 @@ data class FullTaskDTO(
         paymentMethod = paymentMethod,
         description = description,
         title = title,
-        workerUser = workerUser,
-        creatorUser = creatorUser,
+        workerUser = workerUser?.toUserSummaryViewDTO(),
+        creatorUser = creatorUser.toUserSummaryViewDTO(),
         price = price,
         seenCount = seenBy.size,
         endDateTime = endDateTime,
@@ -61,8 +54,8 @@ data class FullTaskDTO(
         paymentMethod = paymentMethod,
         description = description,
         title = title,
-        workerUser = workerUser,
-        creatorUser = creatorUser,
+        workerUser = workerUser?.toUserSummaryViewDTO(),
+        creatorUser = creatorUser.toUserSummaryViewDTO(),
         price = price,
         seenCount = seenBy.size,
         endDateTime = endDateTime,
@@ -84,7 +77,7 @@ data class FullTaskDTO(
         description = description,
         title = title,
         workerUser = null,
-        creatorUser = creatorUser,
+        creatorUser = creatorUser.toUserSummaryViewDTO(),
         price = price,
         seenCount = seenBy.size,
         endDateTime = endDateTime,

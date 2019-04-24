@@ -31,4 +31,8 @@ class Config {
     fun eventEmitter(dataApiClient: DataAPIClient): EventEmitter {
         return EventEmitter(dataApiClient)
     }
+    @Bean
+    fun currentUserId(): String {
+        return "5cc0aac46842561dd2f765fd"
+    }
 }

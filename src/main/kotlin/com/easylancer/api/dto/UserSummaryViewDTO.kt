@@ -4,7 +4,6 @@ import com.easylancer.api.data.dto.UserBadgeDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder(alphabetic=true)
 data class UserSummaryViewDTO(
         val firstName: String?,

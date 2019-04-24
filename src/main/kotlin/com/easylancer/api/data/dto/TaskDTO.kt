@@ -5,13 +5,6 @@ import com.easylancer.api.dto.ListViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.*
 
-/**
- * Representation of a Task
- * @property username The username of the user
- * @property screenName The screen name of the user
- * @property email The email address of the user
- * @property registered When the user registered with us
- */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaskDTO(
     val category: String,
@@ -27,6 +20,8 @@ data class TaskDTO(
     val status: String,
     val acceptedOffer: String?,
     val imagesUrls: Array<String>,
+    val creatorRating: TaskRatingDTO?,
+    val workerRating: TaskRatingDTO?,
     val _id: String,
     val startDateTime: Date,
     val location: TaskLocationDTO,

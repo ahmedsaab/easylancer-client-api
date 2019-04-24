@@ -23,9 +23,9 @@ import org.springframework.web.server.ResponseStatusException
 @FlowPreview
 class TaskPageController(
         @Autowired private val eventEmitter: EventEmitter,
-        @Autowired private val dataClient: DataAPIClient
+        @Autowired private val dataClient: DataAPIClient,
+        @Autowired private val currentUserId: String
 ) {
-    private val currentUserId = "5cb1ef55e83e494919135d9f"
     private var mapper: ObjectMapper = jacksonObjectMapper();
 
     @PostMapping("/create")
@@ -68,7 +68,7 @@ class TaskPageController(
     suspend fun updateTask(
             @PathVariable("id") id: String,
             @RequestBody taskDto: UpdateTaskDTO
-    ) : IdViewDTO = coroutineScope {
+    ) : IdViewDTO {
         val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
         val task = dataClient.getTask(id)
 
@@ -78,7 +78,7 @@ class TaskPageController(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this task")
         }
 
-        IdViewDTO(id);
+        return IdViewDTO(id);
     }
 
     @PostMapping("/{id}/apply")
@@ -94,15 +94,52 @@ class TaskPageController(
         return offer.toIdDTO();
     }
 
-    // TODO: do this after the payment API
     @PostMapping("/{id}/review")
-    suspend fun reviewTask(@RequestBody taskBody: CreateTaskDTO): Unit {
+    suspend fun reviewTask(
+            @PathVariable("id") id: String,
+            @RequestBody reviewDto: CreateTaskReviewDTO
+    ): IdViewDTO {
+        val task: TaskDTO = dataClient.getTask(id)
+        val reviewBody = mapper.valueToTree<ObjectNode>(reviewDto);
+        val taskBody = mapper.createObjectNode();
 
+        when(currentUserId) {
+            task.creatorUser -> {
+                taskBody.set("creatorRating", reviewBody)
+                if (reviewDto.like) {
+                    // Change task status to done
+                    taskBody.put("status", "done")
+                } else if (task.workerRating != null && !task.workerRating.like) {
+                    // Change task status to not-done
+                    taskBody.put("status", "not-done")
+                } else if (task.workerRating != null && task.workerRating.like) {
+                    // Change task to investigate
+                } else {
+                    // Wait for the worker's rating to decide
+                }
+            }
+            task.workerUser -> {
+                taskBody.set("workerRating", reviewBody)
+                if (task.creatorRating != null && !task.creatorRating.like) {
+                    if (reviewDto.like) {
+                        // Change task to investigate
+                    } else {
+                        // Change task status to not-done
+                        taskBody.put("status", "not-done")
+                    }
+                }
+            }
+            else -> throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot review this task")
+        }
+        dataClient.putTask(id, taskBody)
+
+        return IdViewDTO(id)
     }
 
-    // TODO: do this after the payment API
+    // TODO: this is postponed after the release of 0.9.0
     @PostMapping("/{id}/cancel")
     suspend fun cancelTask(@RequestBody taskBody: CreateTaskDTO) : Unit {
+
 
     }
 

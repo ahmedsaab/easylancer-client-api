@@ -18,10 +18,16 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 class SearchPageController(
         @Autowired private val dataClient: DataAPIClient
 ) {
-    private val currentUserId = "5cbf379768204b27444108a9"
-
     @GetMapping("/all")
     suspend fun viewAllTasks() : List<ListViewTaskDTO> {
+        val tasks: Array<TaskDTO> = dataClient.getAllTasks();
+
+        return tasks.map { it.toListViewTaskDTO() }
+    }
+
+    // TODO: implement
+    @GetMapping("/open")
+    suspend fun viewOpenTasks() : List<ListViewTaskDTO> {
         val tasks: Array<TaskDTO> = dataClient.getAllTasks();
 
         return tasks.map { it.toListViewTaskDTO() }

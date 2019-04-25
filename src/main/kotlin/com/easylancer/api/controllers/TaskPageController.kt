@@ -72,7 +72,7 @@ class TaskPageController(
         val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
         val task = dataClient.getTask(id)
 
-        if(task.creatorUser == currentUserId) {
+        if(task.creatorUser == currentUserId && task.status == "open") {
             dataClient.putTask(id, taskBody)
         } else {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this task")
@@ -88,8 +88,9 @@ class TaskPageController(
     ) : IdViewDTO {
         val offerBody = mapper.valueToTree<ObjectNode>(offerDto);
 
+        offerBody.put("task", id)
         offerBody.put("workerUser", currentUserId)
-        val offer = dataClient.postOffer(id, offerBody)
+        val offer = dataClient.postOffer(offerBody)
 
         return offer.toIdDTO();
     }
@@ -129,7 +130,9 @@ class TaskPageController(
                     }
                 }
             }
-            else -> throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot review this task")
+            else -> {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot review this task")
+            }
         }
         dataClient.putTask(id, taskBody)
 

@@ -114,7 +114,7 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
     fun getTaskOffers(id: String): Array<FullOfferDTO> {
         try {
-            val respNode = get("/tasks/$id/offers")
+            val respNode = get("/offers/view?task=$id")
             val dataArray = respNode.get("data")
 
             return mapper.treeToValue(dataArray, Array<FullOfferDTO>::class.java)
@@ -153,9 +153,9 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
         }
     }
 
-    fun postOffer(taskId: String, offer: ObjectNode): OfferDTO {
+    fun postOffer(offer: ObjectNode): OfferDTO {
         try {
-            val responseBody = post("/tasks/$taskId/offers", offer).body
+            val responseBody = post("/offers", offer).body
 
             if (responseBody != null) {
                 return mapper.convertValue(responseBody.get("data"), OfferDTO::class.java)

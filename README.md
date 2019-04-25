@@ -2,7 +2,7 @@
 
 This is the API that will be used to serve the mobile app of Easylancer. It is the entry point for user driven actions and events and it utilizes other microservices like the data api, search api, payment api, authentication api, etc.
 
-This Api also responsible for user's authotization.
+This Api also responsible for user's authorization and business logic.
 
 ## Search Page:
 Page that shows some tasks that the user is interested in as well as the ability to search and filter all tasks open.

@@ -4,6 +4,7 @@ import com.easylancer.api.data.TransformationException
 import com.easylancer.api.dto.IdViewDTO
 import com.easylancer.api.dto.ListViewTaskDTO
 import com.easylancer.api.dto.ViewProfileDTO
+import com.easylancer.api.dto.ViewUserDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.util.*
 
@@ -17,6 +18,7 @@ data class UserDTO(
     val lastName: String?,
     val firstName: String?,
     val imageUrl: String?,
+    val phoneNumber: String?,
     val dislikes: Int,
     val likes: Int,
     val isApproved: Boolean,
@@ -27,6 +29,8 @@ data class UserDTO(
     val email: String,
     val lastSeen: Date,
     val createdAt: Date,
+    val birthDate: Date?,
+    val city: String?,
     val badges: Array<UserBadgeDTO>
 ) {
     fun toViewProfileDTO() = ViewProfileDTO(
@@ -44,5 +48,17 @@ data class UserDTO(
         badges = badges,
         id = _id,
         createdAt = createdAt
+    )
+    fun toViewUserDTO() = ViewUserDTO(
+        lastName = lastName,
+        firstName = firstName,
+        imageUrl = imageUrl ,
+        gender = gender,
+        city =  city,
+        id = _id,
+        email = email,
+        birthDate = birthDate,
+        phoneNumber = phoneNumber,
+        settings = settings
     )
 }

@@ -20,11 +20,10 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 @FlowPreview
 class ProfilePageController(
-        @Autowired private val eventEmitter: EventEmitter,
-        @Autowired private val dataClient: DataAPIClient,
-        @Autowired private val currentUserId: String
-) {
-    private var mapper: ObjectMapper = jacksonObjectMapper();
+        @Autowired override val eventEmitter: EventEmitter,
+        @Autowired override val dataClient: DataAPIClient,
+        @Autowired override val currentUserId: String
+) : BaseController() {
 
     @GetMapping("/{id}/view")
     suspend fun viewProfile(@PathVariable("id") id: String) : ViewProfileDTO {
@@ -74,16 +73,5 @@ class ProfilePageController(
     @PostMapping("/{id}/approve")
     suspend fun approveUser(@PathVariable("id") id: String): Unit {
 
-    }
-
-    /** Handle the error */
-    @ExceptionHandler(Exception::class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleError(e: Exception): ObjectNode {
-        val resp = JsonNodeFactory.instance.objectNode()
-        resp.put("error",e.message)
-        resp.put("code",500)
-        e.printStackTrace()
-        return resp
     }
 }

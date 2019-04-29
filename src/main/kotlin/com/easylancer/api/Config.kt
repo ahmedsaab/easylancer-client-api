@@ -33,6 +33,6 @@ class Config {
     }
     @Bean
     fun currentUserId(): String {
-        return "5cc2028c2cc2241945bca94d"
+        return "5cc202a12cc2241945bca94f"
     }
 }

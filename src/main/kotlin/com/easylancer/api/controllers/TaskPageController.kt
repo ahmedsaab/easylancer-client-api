@@ -2,7 +2,6 @@ package com.easylancer.api.controllers
 
 import com.easylancer.api.data.DataAPIClient
 import com.easylancer.api.data.EventEmitter
-import com.easylancer.api.data.dto.FullOfferDTO
 import com.easylancer.api.data.dto.FullTaskDTO
 import com.easylancer.api.data.dto.TaskDTO
 import com.easylancer.api.dto.*
@@ -13,20 +12,17 @@ import kotlinx.coroutines.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.web.server.ResponseStatusException
 
-
-@RequestMapping("/tasks")
 @RestController
 @FlowPreview
+@RequestMapping("/tasks")
 class TaskPageController(
-        @Autowired private val eventEmitter: EventEmitter,
-        @Autowired private val dataClient: DataAPIClient,
-        @Autowired private val currentUserId: String
-) {
-    private var mapper: ObjectMapper = jacksonObjectMapper();
+        @Autowired override val eventEmitter: EventEmitter,
+        @Autowired override val dataClient: DataAPIClient,
+        @Autowired override val currentUserId: String
+) : BaseController() {
 
     @PostMapping("/create")
     suspend fun createTask(@RequestBody taskDto: CreateTaskDTO) : IdViewDTO {
@@ -72,7 +68,7 @@ class TaskPageController(
         val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
         val task = dataClient.getTask(id)
 
-        if(task.creatorUser == currentUserId && task.status == "open") {
+        if(task.creatorUser == currentUserId) {
             dataClient.putTask(id, taskBody)
         } else {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this task")
@@ -95,6 +91,40 @@ class TaskPageController(
         return offer.toIdDTO();
     }
 
+    @PostMapping("/{id}/accept")
+    suspend fun acceptOfferToTask(
+            @PathVariable("id") id: String,
+            @RequestBody offerDto: AcceptOfferDTO
+    ) : IdViewDTO {
+        val task = dataClient.getTask(id)
+        val taskBody = mapper.createObjectNode();
+
+        if (task.creatorUser != currentUserId) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot accept offers for this task")
+        }
+
+        taskBody.put("acceptedOffer", offerDto.id)
+        dataClient.putTask(id, taskBody)
+
+        return task.toIdDTO();
+    }
+
+    @PostMapping("/{id}/start")
+    suspend fun startTask(
+            @PathVariable("id") id: String
+    ) : IdViewDTO {
+        val task = dataClient.getTask(id)
+        val taskBody = mapper.createObjectNode();
+
+        if (task.workerUser != currentUserId) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot start this task")
+        }
+        taskBody.put("status", "in-progress")
+        dataClient.putTask(id, taskBody)
+
+        return task.toIdDTO();
+    }
+
     @PostMapping("/{id}/review")
     suspend fun reviewTask(
             @PathVariable("id") id: String,
@@ -107,28 +137,9 @@ class TaskPageController(
         when(currentUserId) {
             task.creatorUser -> {
                 taskBody.set("creatorRating", reviewBody)
-                if (reviewDto.like) {
-                    // Change task status to done
-                    taskBody.put("status", "done")
-                } else if (task.workerRating != null && !task.workerRating.like) {
-                    // Change task status to not-done
-                    taskBody.put("status", "not-done")
-                } else if (task.workerRating != null && task.workerRating.like) {
-                    // Change task to investigate
-                } else {
-                    // Wait for the worker's rating to decide
-                }
             }
             task.workerUser -> {
                 taskBody.set("workerRating", reviewBody)
-                if (task.creatorRating != null && !task.creatorRating.like) {
-                    if (reviewDto.like) {
-                        // Change task to investigate
-                    } else {
-                        // Change task status to not-done
-                        taskBody.put("status", "not-done")
-                    }
-                }
             }
             else -> {
                 throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot review this task")
@@ -144,16 +155,5 @@ class TaskPageController(
     suspend fun cancelTask(@RequestBody taskBody: CreateTaskDTO) : Unit {
 
 
-    }
-
-    /** Handle the error */
-    @ExceptionHandler(Exception::class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleError(e: Exception): ObjectNode {
-        val resp = JsonNodeFactory.instance.objectNode()
-        resp.put("error",e.message)
-        resp.put("code",500)
-        e.printStackTrace()
-        return resp
     }
 }

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
 @JsonPropertyOrder(alphabetic=true)
 data class ListViewTaskRatingDTO(
-        val creatorUser: UserSummaryDTO,
+        val creatorUser: UserSummaryViewDTO,
         val criteria: RatingCriteriaDTO,
         val description: String,
         val like: Boolean

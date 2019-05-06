@@ -29,6 +29,12 @@ class TaskPageController(
         val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
         taskBody.put("creatorUser", currentUserId);
 
+        logger.trace("A TRACE Message");
+        logger.debug("A DEBUG Message");
+        logger.info("An INFO Message");
+        logger.warn("A WARN Message");
+        logger.error("An ERROR Message");
+
         val task: TaskDTO = dataClient.postTask(taskBody)
 
         return task.toIdDTO();

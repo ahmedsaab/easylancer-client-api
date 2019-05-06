@@ -20,6 +20,14 @@ dependencies {
     runtimeOnly 'org.springframework.boot:spring-boot-devtools'
     implementation group: 'org.springframework', name: 'spring-webmvc', version: '5.1.6.RELEASE'
 
+    compile 'org.apache.logging.log4j:log4j-core:2.11.2'
+    compile("org.springframework.boot:spring-boot-starter-actuator")
+    compile 'net.logstash.logback:logstash-logback-encoder:5.3'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+
+    compile "ch.qos.logback.contrib:logback-json-classic:0.1.5"
+    compile "ch.qos.logback.contrib:logback-jackson:0.1.5"
+
     implementation 'org.springframework.boot:spring-boot-starter-mustache'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'

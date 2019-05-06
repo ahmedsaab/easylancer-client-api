@@ -1,6 +1,23 @@
 spring:
+  main:
+    banner-mode: "off"
   jackson:
     serialization:
       indent_output: true
       write_dates_as_timestamps: false
       write_durations_as_timestamps: false
+  application:
+    name: easylancer-client-api
+
+logging:
+  level:
+    org:
+      springframework:
+        web:
+          filter:
+            CommonsRequestLoggingFilter: "DEBUG"
+
+data:
+  api:
+    server: "http://localhost"
+    port: 3000

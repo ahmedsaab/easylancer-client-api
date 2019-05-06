@@ -1,15 +1,25 @@
 package com.easylancer.api
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import org.springframework.boot.web.client.RestTemplateBuilder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.web.client.RestTemplate
+import javax.annotation.PreDestroy
+import javax.annotation.PostConstruct
+
+
 
 @SpringBootApplication
-class ApiApplication
+class ApiApplication {
+    @PostConstruct
+    fun startupApplication() {
+        println("Started Application")
+    }
+
+    @PreDestroy
+    fun shutdownApplication() {
+        println("Stopped Application")
+    }
+}
+
 
 fun main(args: Array<String>) {
     runApplication<ApiApplication>(*args)

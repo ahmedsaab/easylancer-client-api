@@ -2,11 +2,11 @@ package com.easylancer.api.controllers
 
 import com.easylancer.api.data.*
 import com.easylancer.api.data.exceptions.DataApiException
-import com.easylancer.api.data.exceptions.DataApiMappingException
-import com.easylancer.api.data.exceptions.DataApiResponseException
+import com.easylancer.api.exceptions.TransformationException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -16,18 +16,9 @@ abstract class BaseController() {
     protected abstract val dataClient: DataAPIClient
     protected abstract val eventEmitter: EventEmitter
 
-    protected val mapper: ObjectMapper = jacksonObjectMapper();
+    protected val mapper: ObjectMapper = jacksonObjectMapper()
 
-    @ExceptionHandler(DataApiResponseException::class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    fun handleDataApiResponseError(e: DataApiResponseException): ObjectNode {
-        val resp = mapper.createObjectNode()
-        resp.set("error", e.toLogJson())
-        resp.put("code", 500)
-        resp.put("message", e.message)
-        e.printStackTrace()
-        return resp
-    }
+    protected val logger = LoggerFactory.getLogger(this.javaClass)
 
     @ExceptionHandler(DataApiException::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -36,7 +27,7 @@ abstract class BaseController() {
         resp.set("error", e.toLogJson())
         resp.put("code", 500)
         resp.put("message", e.message)
-        e.printStackTrace()
+        logger.error(e.message, e)
         return resp
     }
 

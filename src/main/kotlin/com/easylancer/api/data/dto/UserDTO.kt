@@ -1,8 +1,6 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.data.TransformationException
-import com.easylancer.api.dto.IdViewDTO
-import com.easylancer.api.dto.ListViewTaskDTO
+import com.easylancer.api.exceptions.TransformationException
 import com.easylancer.api.dto.ViewProfileDTO
 import com.easylancer.api.dto.ViewUserDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties

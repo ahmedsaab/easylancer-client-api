@@ -1,0 +1,10 @@
+spring:
+  jackson:
+    serialization:
+      indent_output: true
+      write_dates_as_timestamps: false
+      write_durations_as_timestamps: false
+
+
+  application:
+    name: easylancer-client-api

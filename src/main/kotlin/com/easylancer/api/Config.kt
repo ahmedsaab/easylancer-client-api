@@ -26,7 +26,9 @@ import reactor.core.publisher.Mono
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.springframework.core.io.InputStreamResource
 import org.springframework.core.io.buffer.DataBufferUtils
+import reactor.core.publisher.Flux
 import java.io.InputStream
 import java.io.SequenceInputStream
 import java.util.concurrent.Callable
@@ -64,20 +66,37 @@ class Config(@Autowired private val config: DataAPIConfig) {
     }
     @Bean
     fun sampleWebFilter(): WebFilter {
-        return WebFilter { e: ServerWebExchange, c: WebFilterChain ->
-            val startTime = System.currentTimeMillis()
-            val path = e.request.uri.path
-            e.request.body.map {
-                it.asInputStream()
-            }.doOnNext {
-                println(mapper.readValue(it, JsonNode::class.java))
-                c.filter(e)
-            }
-            c.filter(e).doAfterTerminate {
-                val executionTime = System.currentTimeMillis() - startTime
-
-                logger.info("Served '{}' as {} in {} msec", path, e.response.statusCode, executionTime)
-            }
-        }
+//        return WebFilter { e: ServerWebExchange, c: WebFilterChain ->
+//            val startTime = System.currentTimeMillis()
+//            val path = e.request.uri.path
+////            e.request.body.map {
+////                it.asInputStream()
+////            }.doOnNext {
+////                println(mapper.readValue(it, JsonNode::class.java))
+////            }
+////            c.filter(e).doAfterTerminate {
+////                val executionTime = System.currentTimeMillis() - startTime
+////                e.request.body.doOnNext {
+////                    println(it)
+////                }.subscribe()
+////
+////                logger.info("Served $path as ${e.response.statusCode} in $executionTime msec")
+////            }
+////            e.request.body.map {
+////                it.asInputStream()
+////            }.doOnNext {
+////                logger.info(mapper.readValue(it, JsonNode::class.java).toString())
+////            }.then(e.response.setComplete())
+//            e.request.body.map {
+//                it.asInputStream()
+//            }.doOnNext {
+//                val bodyJson = mapper.readValue(it, JsonNode::class.java);
+//
+//                logger.info(bodyJson.toString())
+//            }.map {
+//                DataBufferUtils.read(InputStreamResource(it), e.response.bufferFactory(), 1000)
+//            }.then(c.filter(e))
+//        }
+        return PayloadLoggingFilter(logger)
     }
 }

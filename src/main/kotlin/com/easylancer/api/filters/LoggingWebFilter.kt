@@ -27,6 +27,7 @@ class LoggingWebFilter(private val logger: Logger) : WebFilter {
         return chain.filter(decorate(exchange))
     }
 
+    // TODO: create a data class for the log object
     private fun createLogJson(
             req: ServerHttpRequest, requestBody: JsonNode?,
             resp: ServerHttpResponse, respBody: JsonNode?, time: Long
@@ -58,9 +59,9 @@ class LoggingWebFilter(private val logger: Logger) : WebFilter {
             val baos = ByteArrayOutputStream()
 
             override fun getBody(): Flux<DataBuffer> {
-                return super.getBody().map { dataBuffer ->
-                    Channels.newChannel(baos).write(dataBuffer.asByteBuffer().asReadOnlyBuffer())
-                    dataBuffer
+                return super.getBody().map {
+                    Channels.newChannel(baos).write(it.asByteBuffer().asReadOnlyBuffer())
+                    it
                 }.doOnComplete {
                     requestBody = om.readTree(baos.toByteArray())
                 }
@@ -71,9 +72,9 @@ class LoggingWebFilter(private val logger: Logger) : WebFilter {
             val baos = ByteArrayOutputStream()
 
             override fun writeWith(body: Publisher<out DataBuffer>): Mono<Void> {
-                return body.toMono().map { dataBuffer ->
-                    Channels.newChannel(baos).write(dataBuffer.asByteBuffer().asReadOnlyBuffer())
-                    dataBuffer
+                return body.toMono().map {
+                    Channels.newChannel(baos).write(it.asByteBuffer().asReadOnlyBuffer())
+                    it
                 }.flatMap {
                     super.writeWith(body)
                 }.doOnSuccess {

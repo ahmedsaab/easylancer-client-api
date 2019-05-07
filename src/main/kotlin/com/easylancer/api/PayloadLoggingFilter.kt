@@ -29,6 +29,8 @@ class PayloadLoggingFilter(private val logger: Logger) : WebFilter {
 
     private fun decorate(exchange: ServerWebExchange): ServerWebExchange {
         val decorated = object : ServerHttpRequestDecorator(exchange.request) {
+            val startTime = System.currentTimeMillis()
+
             override fun getBody(): Flux<DataBuffer> {
                 val baos = ByteArrayOutputStream()
 
@@ -39,12 +41,12 @@ class PayloadLoggingFilter(private val logger: Logger) : WebFilter {
                         logger.error("Unable to read request body due to an error", e)
                     }
                     dataBuffer
-                }.doOnComplete {
-                    try {
-                        logger.info("${exchange.request.uri} - ${om.readTree(baos.toByteArray())}")
-                    } catch (e: IOException) {
-                        logger.error("Failed to parse response body to Json", e)
-                    }
+                }.doAfterTerminate {
+                    val executionTime = System.currentTimeMillis() - startTime
+                    val jsonBody = om.readTree(baos.toByteArray())
+                    val respStatus = exchange.response.statusCode
+
+                    logger.info("Served $path, body = $jsonBody as $respStatus in $executionTime msec")
                 }
             }
         }

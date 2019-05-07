@@ -65,7 +65,11 @@ class Config(@Autowired private val config: DataAPIConfig) {
         return "5cc202a12cc2241945bca94f"
     }
     @Bean
-    fun sampleWebFilter(): WebFilter {
+    fun bodyCacheWebFilter(): WebFilter {
+        return PayloadLoggingFilter(logger)
+    }
+//    @Bean
+//    fun loggingWebFilter(): WebFilter {
 //        return WebFilter { e: ServerWebExchange, c: WebFilterChain ->
 //            val startTime = System.currentTimeMillis()
 //            val path = e.request.uri.path
@@ -87,16 +91,15 @@ class Config(@Autowired private val config: DataAPIConfig) {
 ////            }.doOnNext {
 ////                logger.info(mapper.readValue(it, JsonNode::class.java).toString())
 ////            }.then(e.response.setComplete())
-//            e.request.body.map {
-//                it.asInputStream()
-//            }.doOnNext {
-//                val bodyJson = mapper.readValue(it, JsonNode::class.java);
-//
-//                logger.info(bodyJson.toString())
-//            }.map {
-//                DataBufferUtils.read(InputStreamResource(it), e.response.bufferFactory(), 1000)
-//            }.then(c.filter(e))
+////            e.request.body.map {
+////                it.asInputStream()
+////            }.doOnNext {
+////                val bodyJson = mapper.readValue(it, JsonNode::class.java);
+////
+////                logger.info(bodyJson.toString())
+////            }.map {
+////                DataBufferUtils.read(InputStreamResource(it), e.response.bufferFactory(), 1000)
+////            }.then(c.filter(e))
 //        }
-        return PayloadLoggingFilter(logger)
-    }
+//    }
 }

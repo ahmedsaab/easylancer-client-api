@@ -6,6 +6,7 @@ import com.easylancer.api.exceptions.TransformationException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -18,7 +19,7 @@ abstract class BaseController() {
 
     protected val mapper: ObjectMapper = jacksonObjectMapper()
 
-    protected val logger = LoggerFactory.getLogger(this.javaClass)
+    val logger: Logger = LoggerFactory.getLogger("simple-logger")
 
     @ExceptionHandler(DataApiException::class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -27,7 +28,6 @@ abstract class BaseController() {
         resp.set("error", e.toLogJson())
         resp.put("code", 500)
         resp.put("message", e.message)
-        logger.error(e.message, e)
         return resp
     }
 
@@ -37,7 +37,6 @@ abstract class BaseController() {
         val resp = mapper.createObjectNode()
         resp.put("error",e.message)
         resp.put("code",400)
-        e.printStackTrace()
         return resp
     }
 
@@ -47,7 +46,6 @@ abstract class BaseController() {
         val resp = mapper.createObjectNode()
         resp.put("error",e.message)
         resp.put("code",500)
-        e.printStackTrace()
         return resp
     }
 

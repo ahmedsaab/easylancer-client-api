@@ -1,29 +1,21 @@
 package com.easylancer.api.data.exceptions
 
 import com.easylancer.api.data.DataRequest
+import com.easylancer.api.data.DataResponse
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
-abstract class DataApiException: RuntimeException {
-    protected val mapper: ObjectMapper = jacksonObjectMapper()
-    private var request: DataRequest? = null
-
-    abstract val reason: JsonNode?
-
-    constructor(message: String, request: DataRequest, ex: Exception?): super(message, ex) {
-        this.request = request
-    }
-    constructor(message: String, request: DataRequest): super(message) {
-        this.request = request
-    }
-    constructor(ex: Exception, request: DataRequest): super(ex) {
-        this.request = request
-    }
+abstract class DataApiException(
+        override val message: String,
+        private val request: DataRequest,
+        open val response: DataResponse? = null,
+        private val error: Exception? = null
+) : RuntimeException(message, error) {
     fun toLogJson(): JsonNode {
-        val log = mapper.createObjectNode();
-        log.set("reason", reason)
-        log.set("request", mapper.valueToTree(request))
+        val log = jacksonObjectMapper().createObjectNode()
+        log.set("request", jacksonObjectMapper().valueToTree(request))
+        log.set("response", jacksonObjectMapper().valueToTree(response))
+        log.put("message", error?.message)
         return log
     }
 }

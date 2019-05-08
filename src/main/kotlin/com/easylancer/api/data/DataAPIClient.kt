@@ -13,109 +13,183 @@ import org.springframework.web.client.*
 
 class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
-    private var mapper: ObjectMapper = jacksonObjectMapper();
+    private val mapper: ObjectMapper = jacksonObjectMapper()
 
+    private fun getResponseFromResponseException(e: RestClientResponseException): DataErrorResponse {
+        return try {
+            val body = mapper.readValue(e.responseBodyAsString, DataResponseErrorDTO::class.java)
+
+            DataErrorResponse(e.rawStatusCode, body)
+        } catch (eJson: JsonProcessingException) {
+            DataErrorResponse(e.rawStatusCode, e.responseBodyAsString)
+        }
+    }
 
     private inline fun <reified T> get(url: String): T {
         val request = DataRequest(url, HttpMethod.GET)
-        try {
-            val response = restTemplate.getForObject(url, DataResponseSuccessDTO::class.java) ?:
-                throw DataApiUnknownResponseException("API returned an empty response body", request)
-            try {
-                return mapper.treeToValue(response.data, T::class.java)
-            } catch (e: JsonProcessingException) {
-                throw DataApiMappingException("Failed to map API response to DTO", MappingExceptionReason(response.data, T::class.java.name), request)
-            }
-        } catch (e: JsonProcessingException) {
-            throw DataApiUnknownResponseException("API returned an unexpected response body", request)
-        } catch (e: RestClientResponseException) {
-            try {
-                val responseDTO = mapper.readValue(e.responseBodyAsString, DataResponseErrorDTO::class.java)
+        var response: DataResponse?
 
-                throw DataApiResponseException("API returned an error response", responseDTO, e.rawStatusCode, request)
-            } catch (e: JsonProcessingException) {
-                throw DataApiUnknownResponseException("API returned an unexpected response body", request)
-            }
+        try {
+            response = DataSuccessResponse(
+                restTemplate.getForObject(request.url, DataResponseSuccessDTO::class.java) ?:
+                throw DataApiUnexpectedResponseException(
+                        message = "Received an empty response body",
+                        request = request
+                )
+            )
+
+            return mapper.treeToValue(response.bodyDto.data, T::class.java)
+        } catch (e: RestClientResponseException) {
+            response = getResponseFromResponseException(e)
+
+            throw DataApiResponseException(
+                    message = "Received an error response",
+                    request = request,
+                    response = response,
+                    error = e
+            )
+        } catch (e: ResourceAccessException) {
+            throw DataApiNetworkException(
+                    message = "Could not access Data API",
+                    request = request,
+                    error = e
+            )
         } catch (e: RestClientException) {
-            throw DataApiUnhandledException("Unhandled API exception occurred", request, e)
+            if(e.cause is JsonProcessingException) {
+                throw DataApiUnexpectedResponseException(
+                        message = "Failed to transform success response body",
+                        request = request,
+                        error = e
+                )
+            }
+            throw DataApiUnhandledException(
+                    message = "Unhandled exception occurred",
+                    request = request,
+                    error = e
+            )
+        } catch (e: JsonProcessingException) {
+            throw DataApiUnexpectedResponseException(
+                    message = "Failed to transform response payload to ${T::class.java.name}",
+                    request = request,
+                    error = e
+            )
         }
     }
 
     private inline fun <reified T> post(url: String, data: JsonNode = mapper.createObjectNode()): T {
         val request = DataRequest(url, HttpMethod.POST, data)
-        try {
-            val json: JsonNode = restTemplate.postForObject(url, data)
+        var response: DataResponse?
 
-            val obj = json.get("data")
-            try {
-                return mapper.treeToValue(obj, T::class.java)
-            } catch (e: JsonProcessingException) {
-                throw DataApiMappingException("Failed to map API response to DTO", MappingExceptionReason(obj, T::class.java.name), request)
-            }
-        } catch (e: JsonProcessingException) {
-            throw DataApiUnknownResponseException("API returned an unexpected response format (expected JSON)", request)
+        try {
+            val body = restTemplate.postForObject(url, data, DataResponseSuccessDTO::class.java)
+                    ?: throw DataApiUnexpectedResponseException(
+                            message = "Received an empty response body",
+                            request = request
+                    )
+            response = DataSuccessResponse(body)
+
+            return mapper.treeToValue(response.bodyDto.data, T::class.java)
         } catch (e: RestClientResponseException) {
-            try {
-                val responseDTO = mapper.readValue(e.responseBodyAsString, DataResponseErrorDTO::class.java)
-                throw DataApiResponseException("API returned an error response", responseDTO, e.rawStatusCode, request)
-            } catch (e: JsonProcessingException) {
-                throw DataApiUnknownResponseException("Failed to parse API error response DTO", request)
-            }
+            response = getResponseFromResponseException(e)
+
+            throw DataApiResponseException(
+                    message = "Received an error response",
+                    request = request,
+                    response = response,
+                    error = e
+            )
+        } catch (e: ResourceAccessException) {
+            throw DataApiNetworkException(
+                    message = "Could not access Data API",
+                    request = request,
+                    error = e
+            )
         } catch (e: RestClientException) {
-            throw DataApiUnhandledException("Unhandled API exception occurred", request, e)
+            if(e.cause is JsonProcessingException) {
+                throw DataApiUnexpectedResponseException(
+                        message = "Failed to transform success response body",
+                        request = request,
+                        error = e
+                )
+            }
+            throw DataApiUnhandledException(
+                    message = "Unhandled exception occurred",
+                    request = request,
+                    error = e
+            )
+        } catch (e: JsonProcessingException) {
+            throw DataApiUnexpectedResponseException(
+                    message = "Failed to transform response payload to ${T::class.java.name}",
+                    request = request,
+                    error = e
+            )
         }
     }
 
-    private fun put(url: String, data: ObjectNode = mapper.createObjectNode()): Unit {
+    private fun put(url: String, data: ObjectNode = mapper.createObjectNode()) {
         val request = DataRequest(url, HttpMethod.PUT, data)
+        val response: DataResponse?
+
         try {
             return restTemplate.put(url, data)
         } catch (e: RestClientResponseException) {
-            try {
-                val responseDTO = mapper.readValue(e.responseBodyAsString, DataResponseErrorDTO::class.java)
-                throw DataApiResponseException("API returned an error response", responseDTO, e.rawStatusCode, request)
-            } catch (e: JsonProcessingException) {
-                throw DataApiUnknownResponseException("Failed to parse API error response DTO", request)
-            }
+            response = getResponseFromResponseException(e)
+
+            throw DataApiResponseException(
+                    message = "Received an error response",
+                    request = request,
+                    response = response,
+                    error = e
+            )
+        } catch (e: ResourceAccessException) {
+            throw DataApiNetworkException(
+                    message = "Could not access Data API",
+                    request = request,
+                    error = e
+            )
         } catch (e: RestClientException) {
-            throw DataApiUnhandledException("Unhandled API exception occurred", request, e)
+            throw DataApiUnhandledException(
+                    message = "Unhandled exception occurred",
+                    request = request,
+                    error = e
+            )
         }
     }
 
     fun getFullTask(id: String): FullTaskDTO {
-        return get("/tasks/$id/view");
+        return get("/tasks/$id/view")
     }
 
     fun getTask(id: String): TaskDTO {
-        return get("/tasks/$id");
+        return get("/tasks/$id")
     }
 
     fun getUser(id: String): UserDTO {
-        return get("/users/$id");
+        return get("/users/$id")
     }
 
     fun getAllTasks(): Array<TaskDTO> {
-        return get("/tasks");
+        return get("/tasks")
     }
 
     fun getUserFinishedTasks(id: String): Array<TaskDTO> {
-        return get("/users/$id/tasks/finished");
+        return get("/users/$id/tasks/finished")
     }
 
     fun getUserCreatedTasks(id: String): Array<TaskDTO> {
-        return get("/users/$id/tasks/created");
+        return get("/users/$id/tasks/created")
     }
 
     fun getUserRelatedTasks(id: String): Array<TaskDTO> {
-        return get("/users/$id/tasks");
+        return get("/users/$id/tasks")
     }
 
     fun getUserReviews(id: String): Array<FullTaskRatingDTO> {
-        return get("/users/$id/reviews");
+        return get("/users/$id/reviews")
     }
 
     fun getTaskOffers(id: String): Array<FullOfferDTO> {
-        return get("/offers/view?task=$id");
+        return get("/offers/view?task=$id")
     }
 
     fun postTask(task: ObjectNode): TaskDTO {

@@ -6,5 +6,5 @@ import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 
-class DataApiUnhandledException(message: String, request: DataRequest, response: DataResponse? = null, error: RestClientException):
-        DataApiException(message, request, response, error)
+class DataApiNetworkException(message: String, request: DataRequest, error: RestClientException):
+        DataApiException(message, request, null, error)

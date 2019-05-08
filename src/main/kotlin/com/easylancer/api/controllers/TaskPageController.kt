@@ -4,15 +4,15 @@ import com.easylancer.api.data.DataAPIClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.FullTaskDTO
 import com.easylancer.api.data.dto.TaskDTO
+import com.easylancer.api.data.exceptions.DataApiResponseException
 import com.easylancer.api.dto.*
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.easylancer.api.exceptions.HandledNotFoundException
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
@@ -36,16 +36,24 @@ class TaskPageController(
 
     @GetMapping("/{id}/view")
     suspend fun viewTask(@PathVariable("id") id: String) : DetailViewTaskDTO {
-        val task: FullTaskDTO = dataClient.getFullTask(id)
-        eventEmitter.taskSeenByUser(id, currentUserId)
+        try {
+            val task: FullTaskDTO = dataClient.getFullTask(id)
+            eventEmitter.taskSeenByUser(id, currentUserId)
 
-        return if(task.creatorUser._id == currentUserId) {
-            task.toOwnerViewTaskDTO()
-        } else if (task.workerUser != null && task.workerUser._id == currentUserId){
-            task.toWorkerViewTaskDTO()
-        } else {
-            task.toViewerViewTaskDTO()
+            return if(task.creatorUser._id == currentUserId) {
+                task.toOwnerViewTaskDTO()
+            } else if (task.workerUser != null && task.workerUser._id == currentUserId){
+                task.toWorkerViewTaskDTO()
+            } else {
+                task.toViewerViewTaskDTO()
+            }
+        } catch (e: DataApiResponseException) {
+            if(e.response.statusCode == HttpStatus.NOT_FOUND.value()) {
+                throw HandledNotFoundException("Task not found")
+            }
+            throw e
         }
+
     }
 
     @GetMapping("/{id}/offers")

@@ -2,7 +2,7 @@ package com.easylancer.api.controllers
 
 import com.easylancer.api.data.*
 import com.easylancer.api.data.exceptions.DataApiException
-import com.easylancer.api.exceptions.TransformationException
+import com.easylancer.api.exceptions.HandledNotFoundException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 
-abstract class BaseController() {
+abstract class BaseController {
     protected abstract val currentUserId: String
     protected abstract val dataClient: DataAPIClient
     protected abstract val eventEmitter: EventEmitter
@@ -24,19 +24,20 @@ abstract class BaseController() {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     fun handleDataApiMappingError(e: DataApiException): ObjectNode {
         val resp = mapper.createObjectNode()
-        resp.set("error", e.toLogJson())
+        val errorLogJson = e.toLogJson()
+        resp.set("error", errorLogJson)
         resp.put("code", 500)
         resp.put("message", e.message)
-        logger.error(e.message, e)
+        logger.error(errorLogJson.toString())
         return resp
     }
 
-    @ExceptionHandler(TransformationException::class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    fun handleTransformationError(e: Exception): ObjectNode {
+    @ExceptionHandler(HandledNotFoundException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handleNotFoundException(e: HandledNotFoundException): ObjectNode {
         val resp = mapper.createObjectNode()
-        resp.put("error",e.message)
-        resp.put("code",400)
+        resp.put("code", 404)
+        resp.put("message", e.message)
         logger.error(e.message, e)
         return resp
     }

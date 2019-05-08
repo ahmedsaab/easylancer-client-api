@@ -1,11 +1,8 @@
 package com.easylancer.api.data.exceptions
 
 import com.easylancer.api.data.DataRequest
-import com.easylancer.api.data.dto.DataResponseErrorDTO
-import com.fasterxml.jackson.databind.JsonNode
+import com.easylancer.api.data.DataResponse
+import org.springframework.web.client.RestClientResponseException
 
-class DataApiResponseException(message: String, dataErrorResponse: DataResponseErrorDTO, statusCode: Int, request: DataRequest): DataApiException(message, request) {
-    override val reason: JsonNode = mapper.valueToTree(ResponseExceptionReason(dataErrorResponse, statusCode))
-}
-
-data class ResponseExceptionReason(val body: DataResponseErrorDTO, val statusCode: Int)
+class DataApiResponseException(message: String, request: DataRequest, override val response: DataResponse, error: RestClientResponseException? = null):
+        DataApiException(message, request, response, error)

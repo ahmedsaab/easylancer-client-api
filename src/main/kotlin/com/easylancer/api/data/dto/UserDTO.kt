@@ -1,6 +1,6 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.exceptions.TransformationException
+import com.easylancer.api.exceptions.runtime.TransformationException
 import com.easylancer.api.dto.ViewProfileDTO
 import com.easylancer.api.dto.ViewUserDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties

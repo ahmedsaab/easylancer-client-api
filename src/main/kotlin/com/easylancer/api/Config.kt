@@ -10,7 +10,9 @@ import org.springframework.web.reactive.function.client.WebClient
 import com.easylancer.api.data.DataAPIClient
 import com.easylancer.api.data.DataAPIConfig
 import com.easylancer.api.data.EventEmitter
+import com.easylancer.api.exceptions.ErrorResponseDTOComposer
 import com.easylancer.api.filters.LoggingWebFilter
+import org.apache.logging.log4j.core.config.Order
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.server.WebFilter
@@ -46,7 +48,7 @@ class Config(@Autowired private val config: DataAPIConfig) {
         return "5cc202a12cc2241945bca94f"
     }
     @Bean
-    fun loggingWebFilter(): WebFilter {
-        return LoggingWebFilter(logger)
+    fun errorResponseComposer(): ErrorResponseDTOComposer {
+        return ErrorResponseDTOComposer()
     }
 }

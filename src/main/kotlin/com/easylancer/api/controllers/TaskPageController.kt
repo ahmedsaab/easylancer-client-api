@@ -6,7 +6,7 @@ import com.easylancer.api.data.dto.FullTaskDTO
 import com.easylancer.api.data.dto.TaskDTO
 import com.easylancer.api.data.exceptions.DataApiResponseException
 import com.easylancer.api.dto.*
-import com.easylancer.api.exceptions.HandledNotFoundException
+import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 
@@ -49,7 +49,7 @@ class TaskPageController(
             }
         } catch (e: DataApiResponseException) {
             if(e.response.statusCode == HttpStatus.NOT_FOUND.value()) {
-                throw HandledNotFoundException("Task not found")
+                throw HttpNotFoundException("Task not found")
             }
             throw e
         }

@@ -1,7 +1,6 @@
 package com.easylancer.api.exceptions
 
-import com.easylancer.api.filters.LoggingWebFilter
-import com.easylancer.api.filters.decorate
+import com.easylancer.api.filters.decorateWithBodyLoaders
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.server.ServerWebExchange
@@ -18,15 +17,14 @@ class DefaultErrorWebExceptionHandler(
 ) : ErrorWebExceptionHandler {
     override fun handle(exchange: ServerWebExchange, ex: Throwable): Mono<Void> {
         val errorResponseDto = errorResponseDTOComposer.compose(ex);
-        val decoratedExchange = decorate(exchange)
         val dataBuffer = DefaultDataBufferFactory().wrap(
                 jacksonObjectMapper().writeValueAsBytes(errorResponseDto)
         )
 
-        decoratedExchange.response.headers.contentType = MediaType.APPLICATION_JSON;
-        decoratedExchange.response.statusCode = HttpStatus.resolve(errorResponseDto.status);
-        decoratedExchange.attributes["exception"] = ex;
+        exchange.response.headers.contentType = MediaType.APPLICATION_JSON;
+        exchange.response.statusCode = HttpStatus.resolve(errorResponseDto.status);
+        exchange.attributes["exception"] = ex;
 
-        return decoratedExchange.response.writeWith(Mono.just(dataBuffer))
+        return decorateWithBodyLoaders(exchange).response.writeWith(Mono.just(dataBuffer))
     }
 }

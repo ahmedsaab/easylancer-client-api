@@ -15,6 +15,48 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
+    private fun wrapException(e: Exception, request: DataRequest): DataApiException {
+        when(e) {
+            is RestClientResponseException -> {
+                throw DataApiResponseException(
+                        message = "Received ${e.rawStatusCode} error response from Data API",
+                        request = request,
+                        response = getResponseFromResponseException(e),
+                        error = e
+                )
+            }
+            is ResourceAccessException -> {
+                throw DataApiNetworkException(
+                        message = "Could not access Data API",
+                        request = request,
+                        error = e
+                )
+            }
+            is RestClientException -> {
+                if(e.cause is JsonProcessingException) {
+                    throw DataApiUnexpectedResponseException(
+                            message = "Failed to transform success response body from Data API",
+                            request = request,
+                            error = e
+                    )
+                }
+                throw DataApiUnhandledException(
+                        message = "Unhandled exception occurred calling the Data API",
+                        request = request,
+                        error = e
+                )
+            }
+            is JsonProcessingException -> {
+                throw DataApiUnexpectedResponseException(
+                        message = "Failed to transform success response payload returned from Data API",
+                        request = request,
+                        error = e
+                )
+            }
+        }
+        throw e
+    }
+
     private fun getResponseFromResponseException(e: RestClientResponseException): DataErrorResponse {
         return try {
             val body = mapper.readValue(e.responseBodyAsString, DataResponseErrorDTO::class.java)
@@ -27,132 +69,41 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
     private inline fun <reified T> get(url: String): T {
         val request = DataRequest(url, HttpMethod.GET)
-        var response: DataResponse?
+        val response: DataResponse?
 
         try {
             response = DataSuccessResponse(
-                restTemplate.getForObject(request.url, DataResponseSuccessDTO::class.java) ?:
-                throw DataApiUnexpectedResponseException(
-                        message = "Received an empty response body",
-                        request = request
-                )
+                    restTemplate.getForObject(request.url, DataResponseSuccessDTO::class.java)!!
             )
 
             return mapper.treeToValue(response.bodyDto.data, T::class.java)
-        } catch (e: RestClientResponseException) {
-            response = getResponseFromResponseException(e)
-
-            throw DataApiResponseException(
-                    message = "Received an error response",
-                    request = request,
-                    response = response,
-                    error = e
-            )
-        } catch (e: ResourceAccessException) {
-            throw DataApiNetworkException(
-                    message = "Could not access Data API",
-                    request = request,
-                    error = e
-            )
-        } catch (e: RestClientException) {
-            if(e.cause is JsonProcessingException) {
-                throw DataApiUnexpectedResponseException(
-                        message = "Failed to transform success response body",
-                        request = request,
-                        error = e
-                )
-            }
-            throw DataApiUnhandledException(
-                    message = "Unhandled exception occurred",
-                    request = request,
-                    error = e
-            )
-        } catch (e: JsonProcessingException) {
-            throw DataApiUnexpectedResponseException(
-                    message = "Failed to transform response payload to ${T::class.java.name}",
-                    request = request,
-                    error = e
-            )
+        } catch (e: Exception) {
+            throw wrapException(e, request)
         }
     }
 
     private inline fun <reified T> post(url: String, data: JsonNode = mapper.createObjectNode()): T {
         val request = DataRequest(url, HttpMethod.POST, data)
-        var response: DataResponse?
+        val response: DataResponse?
 
         try {
-            val body = restTemplate.postForObject(url, data, DataResponseSuccessDTO::class.java)
-                    ?: throw DataApiUnexpectedResponseException(
-                            message = "Received an empty response body",
-                            request = request
-                    )
-            response = DataSuccessResponse(body)
+            response = DataSuccessResponse(
+                    restTemplate.postForObject(url, data, DataResponseSuccessDTO::class.java)!!
+            )
 
             return mapper.treeToValue(response.bodyDto.data, T::class.java)
-        } catch (e: RestClientResponseException) {
-            response = getResponseFromResponseException(e)
-
-            throw DataApiResponseException(
-                    message = "Received an error response",
-                    request = request,
-                    response = response,
-                    error = e
-            )
-        } catch (e: ResourceAccessException) {
-            throw DataApiNetworkException(
-                    message = "Could not access Data API",
-                    request = request,
-                    error = e
-            )
-        } catch (e: RestClientException) {
-            if(e.cause is JsonProcessingException) {
-                throw DataApiUnexpectedResponseException(
-                        message = "Failed to transform success response body",
-                        request = request,
-                        error = e
-                )
-            }
-            throw DataApiUnhandledException(
-                    message = "Unhandled exception occurred",
-                    request = request,
-                    error = e
-            )
-        } catch (e: JsonProcessingException) {
-            throw DataApiUnexpectedResponseException(
-                    message = "Failed to transform response payload to ${T::class.java.name}",
-                    request = request,
-                    error = e
-            )
+        } catch (e: Exception) {
+            throw wrapException(e, request)
         }
     }
 
     private fun put(url: String, data: ObjectNode = mapper.createObjectNode()) {
         val request = DataRequest(url, HttpMethod.PUT, data)
-        val response: DataResponse?
 
         try {
             return restTemplate.put(url, data)
-        } catch (e: RestClientResponseException) {
-            response = getResponseFromResponseException(e)
-
-            throw DataApiResponseException(
-                    message = "Received an error response",
-                    request = request,
-                    response = response,
-                    error = e
-            )
-        } catch (e: ResourceAccessException) {
-            throw DataApiNetworkException(
-                    message = "Could not access Data API",
-                    request = request,
-                    error = e
-            )
-        } catch (e: RestClientException) {
-            throw DataApiUnhandledException(
-                    message = "Unhandled exception occurred",
-                    request = request,
-                    error = e
-            )
+        } catch (e: Exception) {
+            throw wrapException(e, request)
         }
     }
 

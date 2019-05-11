@@ -11,11 +11,8 @@ import com.easylancer.api.data.DataAPIClient
 import com.easylancer.api.data.DataAPIConfig
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.exceptions.ErrorResponseDTOComposer
-import com.easylancer.api.filters.LoggingWebFilter
-import org.apache.logging.log4j.core.config.Order
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.server.WebFilter
 import org.slf4j.Logger
 
 

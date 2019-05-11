@@ -8,10 +8,13 @@ import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
 @Component
-@Order(1)
+@Order(3)
 class ExecutionTimeWebFilter : WebFilter {
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-        exchange.attributes["startTime"] = System.currentTimeMillis()
-        return chain.filter(exchange)
+        val startTime = System.currentTimeMillis()
+
+        return chain.filter(exchange).doOnTerminate {
+            exchange.attributes["execution-time"] = System.currentTimeMillis() - startTime
+        }
     }
 }

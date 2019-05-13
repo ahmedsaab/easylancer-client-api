@@ -1,4 +1,4 @@
-package com.easylancer.api
+package com.easylancer.api.config
 
 
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -7,18 +7,14 @@ import org.springframework.http.HttpHeaders
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
 
-import com.easylancer.api.data.DataAPIClient
-import com.easylancer.api.data.DataAPIConfig
+import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.exceptions.ErrorResponseDTOComposer
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.slf4j.Logger
 
 
 @Configuration
-class Config(@Autowired private val config: DataAPIConfig) {
-    val logger: Logger = LoggerFactory.getLogger("simple-logger")
+class Config(@Autowired private val config: DataApi) {
     val apiUrl = "${config.url}:${config.port}"
 
     @Bean
@@ -33,12 +29,12 @@ class Config(@Autowired private val config: DataAPIConfig) {
                 .build()
     }
     @Bean
-    fun dataApiClient(restTemplate: RestTemplate): DataAPIClient {
-        return DataAPIClient(restTemplate)
+    fun dataApiClient(restTemplate: RestTemplate): RestClient {
+        return RestClient(restTemplate)
     }
     @Bean
-    fun eventEmitter(dataApiClient: DataAPIClient): EventEmitter {
-        return EventEmitter(dataApiClient)
+    fun eventEmitter(restClient: RestClient): EventEmitter {
+        return EventEmitter(restClient)
     }
     @Bean
     fun currentUserId(): String {

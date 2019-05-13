@@ -48,6 +48,10 @@
         <appender-ref ref="simple" />
     </logger>
 
+    <root level="debug">
+        <appender-ref ref="simple" />
+    </root>
+
 
 <!--    <logger name="infoLogger" level="debug">-->
 <!--        <appender-ref ref="json" />-->

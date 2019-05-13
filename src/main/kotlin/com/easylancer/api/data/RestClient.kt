@@ -11,11 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
 import org.springframework.web.client.*
 
-class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
+
+
+class RestClient(@Autowired private val restTemplate: RestTemplate) {
 
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
-    private fun wrapException(e: Exception, request: DataRequest): DataApiException {
+    private fun wrapException(e: Exception, request: Request): DataApiException {
         when(e) {
             is RestClientResponseException -> {
                 throw DataApiResponseException(
@@ -68,7 +70,7 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
     }
 
     private inline fun <reified T> get(url: String): T {
-        val request = DataRequest(url, HttpMethod.GET)
+        val request = Request(url, HttpMethod.GET)
         val response: DataResponse?
 
         try {
@@ -82,8 +84,28 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
         }
     }
 
+    private inline fun <reified T> findOne(url: String): T {
+        val request = Request(url, HttpMethod.GET)
+        val response: DataResponse?
+
+        try {
+            response = DataSuccessResponse(
+                    restTemplate.getForObject(request.url, DataResponseSuccessDTO::class.java)!!
+            )
+            if (response.bodyDto.data.get(0) == null) {
+                throw DataApiResponseException(
+                        message = "Received an empty list from API Call", request = request, response = response
+                )
+            }
+            return mapper.treeToValue(response.bodyDto.data.first(), T::class.java)
+
+        } catch (e: Exception) {
+            throw wrapException(e, request)
+        }
+    }
+
     private inline fun <reified T> post(url: String, data: JsonNode = mapper.createObjectNode()): T {
-        val request = DataRequest(url, HttpMethod.POST, data)
+        val request = Request(url, HttpMethod.POST, data)
         val response: DataResponse?
 
         try {
@@ -98,7 +120,7 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
     }
 
     private fun put(url: String, data: ObjectNode = mapper.createObjectNode()) {
-        val request = DataRequest(url, HttpMethod.PUT, data)
+        val request = Request(url, HttpMethod.PUT, data)
 
         try {
             return restTemplate.put(url, data)
@@ -117,6 +139,10 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
     fun getUser(id: String): UserDTO {
         return get("/users/$id")
+    }
+
+    fun getUserByEmail(email: String): UserDTO {
+        return findOne("/users?email=$email")
     }
 
     fun getAllTasks(): Array<TaskDTO> {
@@ -145,6 +171,10 @@ class DataAPIClient(@Autowired private val restTemplate: RestTemplate) {
 
     fun postTask(task: ObjectNode): TaskDTO {
         return post("/tasks", task)
+    }
+
+    fun postUser(user: ObjectNode): UserDTO {
+        return post("/users", user)
     }
 
     fun putTask(taskId: String, task: ObjectNode) {

@@ -1,18 +1,17 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.DataAPIClient
+import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.*
 import com.easylancer.api.dto.*
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.easylancer.api.security.User
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.web.server.ResponseStatusException
 
 
@@ -21,8 +20,7 @@ import org.springframework.web.server.ResponseStatusException
 @FlowPreview
 class ProfilePageController(
         @Autowired override val eventEmitter: EventEmitter,
-        @Autowired override val dataClient: DataAPIClient,
-        @Autowired override val currentUserId: String
+        @Autowired override val dataClient: RestClient
 ) : BaseController() {
 
     @GetMapping("/{id}/view")
@@ -35,11 +33,12 @@ class ProfilePageController(
     @PutMapping("/{id}/edit")
     suspend fun updateProfile(
             @PathVariable("id") id: String,
-            @RequestBody profileDto: UpdateProfileDTO
+            @RequestBody profileDto: UpdateProfileDTO,
+            @AuthenticationPrincipal user: User
     ) : IdViewDTO {
         val profileBody = mapper.valueToTree<ObjectNode>(profileDto)
 
-        if(id == currentUserId) {
+        if(id == user.id) {
             dataClient.putUser(id, profileBody)
         } else {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this profile")

@@ -15,7 +15,7 @@ logging:
       springframework:
         web:
           filter:
-            CommonsRequestLoggingFilter: "DEBUG"
+            CommonsRequestLoggingFilter: "ERROR"
 
 data:
   api:

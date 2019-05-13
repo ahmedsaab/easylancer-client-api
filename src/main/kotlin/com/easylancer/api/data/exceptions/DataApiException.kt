@@ -1,13 +1,13 @@
 package com.easylancer.api.data.exceptions
 
-import com.easylancer.api.data.DataRequest
+import com.easylancer.api.data.Request
 import com.easylancer.api.data.DataResponse
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 abstract class DataApiException(
         override val message: String,
-        private val request: DataRequest,
+        private val request: Request,
         open val response: DataResponse? = null,
         private val error: Exception? = null
 ) : RuntimeException(message, error) {

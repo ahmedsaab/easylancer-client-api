@@ -1,6 +1,6 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.DataAPIClient
+import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.TaskDTO
 import com.easylancer.api.dto.*
@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.*
 @FlowPreview
 class SearchPageController(
         @Autowired override val eventEmitter: EventEmitter,
-        @Autowired override val dataClient: DataAPIClient,
-        @Autowired override val currentUserId: String
+        @Autowired override val dataClient: RestClient
 ) : BaseController() {
     @GetMapping("/all")
     suspend fun viewAllTasks() : List<ListViewTaskDTO> {

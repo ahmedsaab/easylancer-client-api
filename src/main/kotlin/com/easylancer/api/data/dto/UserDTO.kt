@@ -19,6 +19,7 @@ data class UserDTO(
     val phoneNumber: String?,
     val dislikes: Int,
     val likes: Int,
+    val password: String,
     val isApproved: Boolean,
     val gender: String,
     val ratings: UserRatingDTO,

@@ -16,6 +16,8 @@ class DefaultErrorWebExceptionHandler(
         @Autowired private val errorResponseDTOComposer: ErrorResponseDTOComposer
 ) : ErrorWebExceptionHandler {
     override fun handle(exchange: ServerWebExchange, ex: Throwable): Mono<Void> {
+        ex.printStackTrace()
+
         val errorResponseDto = errorResponseDTOComposer.compose(ex);
         val dataBuffer = DefaultDataBufferFactory().wrap(
                 jacksonObjectMapper().writeValueAsBytes(errorResponseDto)

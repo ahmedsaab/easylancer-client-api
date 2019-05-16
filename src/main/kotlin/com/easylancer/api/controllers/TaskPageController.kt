@@ -26,7 +26,10 @@ class TaskPageController(
 ) : BaseController() {
 
     @PostMapping("/create")
-    suspend fun createTask(@RequestBody taskDto: CreateTaskDTO, @AuthenticationPrincipal user: User) : IdViewDTO {
+    suspend fun createTask(
+            @RequestBody taskDto: CreateTaskDTO,
+            @AuthenticationPrincipal user: User
+    ) : IdViewDTO {
         val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
         taskBody.put("creatorUser", user.id);
 

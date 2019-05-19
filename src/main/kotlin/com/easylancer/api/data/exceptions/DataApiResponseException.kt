@@ -1,12 +1,12 @@
 package com.easylancer.api.data.exceptions
 
-import com.easylancer.api.data.http.ResponseError
-import com.easylancer.api.data.http.Request
+import com.easylancer.api.data.http.DataResponseError
+import com.easylancer.api.data.http.DataRequest
 import org.springframework.web.client.RestClientResponseException
 
 class DataApiResponseException(
         message: String,
-        override val request: Request,
-        val responseError: ResponseError,
+        override val dataRequest: DataRequest,
+        val dataResponseError: DataResponseError,
         error: RestClientResponseException? = null
-): DataApiException(message, request, responseError, error)
+): DataApiException(message, dataRequest, dataResponseError, error)

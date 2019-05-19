@@ -1,7 +1,7 @@
 package com.easylancer.api.data.exceptions
 
-import com.easylancer.api.data.http.Request
+import com.easylancer.api.data.http.DataRequest
 import org.springframework.web.client.RestClientException
 
-class DataApiNetworkException(message: String, request: Request, error: RestClientException):
-        DataApiException(message, request, null, error)
+class DataApiNetworkException(message: String, dataRequest: DataRequest, error: RestClientException):
+        DataApiException(message, dataRequest, null, error)

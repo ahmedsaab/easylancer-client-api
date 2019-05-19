@@ -11,7 +11,9 @@ import com.easylancer.api.exceptions.http.HttpAuthorizationException
 import com.easylancer.api.exceptions.http.HttpBadRequestException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.easylancer.api.security.User
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,12 +22,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@FlowPreview
 @RequestMapping("/tasks")
 class TaskPageController(
-        @Autowired override val eventEmitter: EventEmitter,
-        @Autowired override val dataClient: RestClient
-) : BaseController() {
+        @Autowired val eventEmitter: EventEmitter,
+        @Autowired val dataClient: RestClient
+) {
+    private val mapper: ObjectMapper = jacksonObjectMapper()
 
     @PostMapping("/create")
     suspend fun createTask(
@@ -61,7 +63,7 @@ class TaskPageController(
                 task.toViewerViewTaskDTO()
             }
         } catch (e: DataApiResponseException) {
-            if(e.responseError.statusCode == HttpStatus.NOT_FOUND.value()) {
+            if(e.dataResponseError.statusCode == HttpStatus.NOT_FOUND.value()) {
                 throw HttpNotFoundException("Task not found")
             }
             throw e

@@ -28,9 +28,9 @@ fun decorateWithBodyLoaders(exchange: ServerWebExchange): ServerWebExchange {
                 it
             }.doOnComplete {
                 try {
-                    exchange.attributes["request-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
+                    exchange.attributes["dataRequest-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
                 } catch (e: JsonParseException) {
-                    exchange.attributes["request-body-json"] = byteStream.toString()
+                    exchange.attributes["dataRequest-body-json"] = byteStream.toString()
                     throw HttpBadRequestException("invalid json body");
                 }
             }
@@ -48,7 +48,7 @@ fun decorateWithBodyLoaders(exchange: ServerWebExchange): ServerWebExchange {
                 super.writeWith(body)
             }.doOnSuccess {
                 //TODO: handle JsonParseException from readTree
-                exchange.attributes["responseError-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
+                exchange.attributes["dataResponseError-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
             }
         }
     }

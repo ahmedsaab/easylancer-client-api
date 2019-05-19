@@ -12,11 +12,10 @@ import org.springframework.web.bind.annotation.*
 
 @RequestMapping("/search")
 @RestController
-@FlowPreview
 class SearchPageController(
-        @Autowired override val eventEmitter: EventEmitter,
-        @Autowired override val dataClient: RestClient
-) : BaseController() {
+        @Autowired val eventEmitter: EventEmitter,
+        @Autowired val dataClient: RestClient
+) {
     @GetMapping("/all")
     suspend fun viewAllTasks() : List<ListViewTaskDTO> {
         val tasks: Array<TaskDTO> = dataClient.getAllTasks();

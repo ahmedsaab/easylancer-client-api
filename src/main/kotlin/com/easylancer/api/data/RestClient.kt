@@ -2,10 +2,10 @@ package com.easylancer.api.data
 
 import com.easylancer.api.data.dto.*
 import com.easylancer.api.data.exceptions.*
-import com.easylancer.api.data.http.ResponseError
+import com.easylancer.api.data.http.DataResponseError
 import com.easylancer.api.data.http.DataResponse
-import com.easylancer.api.data.http.ResponseSuccess
-import com.easylancer.api.data.http.Request
+import com.easylancer.api.data.http.DataResponseSuccess
+import com.easylancer.api.data.http.DataRequest
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -21,41 +21,41 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
 
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
-    private fun wrapException(e: Exception, request: Request): DataApiException {
+    private fun wrapException(e: Exception, dataRequest: DataRequest): DataApiException {
         when(e) {
             is RestClientResponseException -> {
                 throw DataApiResponseException(
-                        message = "Received ${e.rawStatusCode} error responseError from Data API",
-                        request = request,
-                        responseError = getResponseFromResponseException(e),
+                        message = "Received ${e.rawStatusCode} error dataResponseError from Data API",
+                        dataRequest = dataRequest,
+                        dataResponseError = getResponseFromResponseException(e),
                         error = e
                 )
             }
             is ResourceAccessException -> {
                 throw DataApiNetworkException(
                         message = "Could not access Data API",
-                        request = request,
+                        dataRequest = dataRequest,
                         error = e
                 )
             }
             is RestClientException -> {
                 if(e.cause is JsonProcessingException) {
                     throw DataApiUnexpectedResponseException(
-                            message = "Failed to transform success responseError body from Data API",
-                            request = request,
+                            message = "Failed to transform success dataResponseError body from Data API",
+                            dataRequest = dataRequest,
                             error = e
                     )
                 }
                 throw DataApiUnhandledException(
                         message = "Unhandled exception occurred calling the Data API",
-                        request = request,
+                        dataRequest = dataRequest,
                         error = e
                 )
             }
             is JsonProcessingException -> {
                 throw DataApiUnexpectedResponseException(
-                        message = "Failed to transform success responseError payload returned from Data API",
-                        request = request,
+                        message = "Failed to transform success dataResponseError payload returned from Data API",
+                        dataRequest = dataRequest,
                         error = e
                 )
             }
@@ -63,22 +63,22 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
         throw e
     }
 
-    private fun getResponseFromResponseException(e: RestClientResponseException): ResponseError {
+    private fun getResponseFromResponseException(e: RestClientResponseException): DataResponseError {
         return try {
             val body = mapper.readValue(e.responseBodyAsString, DataResponseErrorDTO::class.java)
 
-            ResponseError(e.rawStatusCode, body)
+            DataResponseError(e.rawStatusCode, body)
         } catch (eJson: JsonProcessingException) {
-            ResponseError(e.rawStatusCode, e.responseBodyAsString)
+            DataResponseError(e.rawStatusCode, e.responseBodyAsString)
         }
     }
 
     private inline fun <reified T> get(url: String): T {
-        val request = Request(url, HttpMethod.GET)
+        val request = DataRequest(url, HttpMethod.GET)
         val response: DataResponse?
 
         try {
-            response = ResponseSuccess(
+            response = DataResponseSuccess(
                     restTemplate.getForObject(request.url, DataResponseSuccessDTO::class.java)!!
             )
 
@@ -89,17 +89,17 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
     }
 
     private inline fun <reified T> findOne(url: String): T {
-        val request = Request(url, HttpMethod.GET)
+        val request = DataRequest(url, HttpMethod.GET)
         val response: DataResponse?
 
         try {
-            response = ResponseSuccess(
+            response = DataResponseSuccess(
                     restTemplate.getForObject(request.url, DataResponseSuccessDTO::class.java)!!
             )
             if (response.body.data.get(0) == null) {
                 throw DataApiNotFoundException(
                         message = "Couldn't find at-least one element from Data API",
-                        request = request,
+                        dataRequest = request,
                         response = response
                 )
             }
@@ -111,11 +111,11 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
     }
 
     private inline fun <reified T> post(url: String, data: JsonNode = mapper.createObjectNode()): T {
-        val request = Request(url, HttpMethod.POST, data)
+        val request = DataRequest(url, HttpMethod.POST, data)
         val response: DataResponse?
 
         try {
-            response = ResponseSuccess(
+            response = DataResponseSuccess(
                     restTemplate.postForObject(url, data, DataResponseSuccessDTO::class.java)!!
             )
 
@@ -126,7 +126,7 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
     }
 
     private fun put(url: String, data: ObjectNode = mapper.createObjectNode()) {
-        val request = Request(url, HttpMethod.PUT, data)
+        val request = DataRequest(url, HttpMethod.PUT, data)
 
         try {
             return restTemplate.put(url, data)
@@ -147,7 +147,7 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
         try {
             return get("/users/$id")
         } catch (e: DataApiResponseException) {
-            if (e.responseError.statusCode == 404) {
+            if (e.dataResponseError.statusCode == 404) {
                 throw DataApiNotFoundException("No user found with this id", e)
             }
             throw e
@@ -186,7 +186,7 @@ class RestClient(@Autowired private val restTemplate: RestTemplate) {
         try {
             return post("/tasks", task)
         } catch (e: DataApiResponseException) {
-            if (e.responseError.statusCode == 400) {
+            if (e.dataResponseError.statusCode == 400) {
                 throw DataApiBadRequestException("Invalid task body", e)
             }
             throw e

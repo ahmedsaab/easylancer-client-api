@@ -8,7 +8,9 @@ import com.easylancer.api.dto.*
 import com.easylancer.api.exceptions.http.HttpAuthorizationException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.easylancer.api.security.User
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,11 +22,11 @@ import org.springframework.web.server.ResponseStatusException
 
 @RequestMapping("/profiles")
 @RestController
-@FlowPreview
 class ProfilePageController(
-        @Autowired override val eventEmitter: EventEmitter,
-        @Autowired override val dataClient: RestClient
-) : BaseController() {
+        @Autowired val eventEmitter: EventEmitter,
+        @Autowired val dataClient: RestClient
+) {
+    private val mapper: ObjectMapper = jacksonObjectMapper()
 
     @GetMapping("/{id}/view")
     suspend fun viewProfile(@PathVariable("id") id: String) : ViewProfileDTO {

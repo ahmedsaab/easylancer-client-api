@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException
 
 @RequestMapping("/users")
 @RestController
-@FlowPreview
 class UserController(
         @Autowired private val eventEmitter: EventEmitter,
         @Autowired private val dataClient: RestClient

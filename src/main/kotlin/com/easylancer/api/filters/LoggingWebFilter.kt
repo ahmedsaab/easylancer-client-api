@@ -22,7 +22,7 @@ class LoggingWebFilter : WebFilter {
         val executionTime = exchange.attributes["execution-time"] as Long?
         val exception = exchange.attributes["exception"] as Throwable?
 
-        val responseBody = exchange.attributes["responseError-body-json"] as JsonNode?
+        val responseBody = exchange.attributes["dataResponseError-body-json"] as JsonNode?
 
         val statusCode = exchange.response.statusCode?.value()
         val queryParams = jacksonObjectMapper().valueToTree<JsonNode>(exchange.request.queryParams)
@@ -32,9 +32,9 @@ class LoggingWebFilter : WebFilter {
         request.set("queryParams", queryParams)
 
         try {
-            request.set("body", exchange.attributes["request-body-json"] as JsonNode?)
+            request.set("body", exchange.attributes["dataRequest-body-json"] as JsonNode?)
         } catch (e: Exception) {
-            request.put("body", exchange.attributes["request-body-json"] as String)
+            request.put("body", exchange.attributes["dataRequest-body-json"] as String)
         }
 
         response.put("statusCode", statusCode)
@@ -42,8 +42,8 @@ class LoggingWebFilter : WebFilter {
 
         log.put("prefix", exchange.logPrefix)
         log.put("time", executionTime)
-        log.set("request", request)
-        log.set("responseError", response)
+        log.set("dataRequest", request)
+        log.set("dataResponseError", response)
         if (exception != null) {
             log.put("exception", exception.javaClass.simpleName)
         }
@@ -57,7 +57,7 @@ class LoggingWebFilter : WebFilter {
 
         val executionTime = exchange.attributes["execution-time"] as Long?
         val exception = exchange.attributes["exception"] as Throwable?
-        val responseBody = exchange.attributes["responseError-body-json"] as JsonNode?
+        val responseBody = exchange.attributes["dataResponseError-body-json"] as JsonNode?
 
         val statusCode = exchange.response.statusCode?.value()
         val url = exchange.request.uri.toString()

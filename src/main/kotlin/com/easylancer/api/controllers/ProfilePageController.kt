@@ -3,7 +3,10 @@ package com.easylancer.api.controllers
 import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.*
+import com.easylancer.api.data.exceptions.DataApiNotFoundException
 import com.easylancer.api.dto.*
+import com.easylancer.api.exceptions.http.HttpAuthorizationException
+import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.easylancer.api.security.User
 import com.fasterxml.jackson.databind.node.ObjectNode
 import kotlinx.coroutines.*
@@ -25,9 +28,13 @@ class ProfilePageController(
 
     @GetMapping("/{id}/view")
     suspend fun viewProfile(@PathVariable("id") id: String) : ViewProfileDTO {
-        val user: UserDTO = dataClient.getUser(id)
+        try {
+            val user: UserDTO = dataClient.getUser(id)
 
-        return user.toViewProfileDTO();
+            return user.toViewProfileDTO();
+        } catch (e: DataApiNotFoundException) {
+            throw HttpNotFoundException("No profile found with this id", e)
+        }
     }
 
     @PutMapping("/{id}/edit")
@@ -41,7 +48,7 @@ class ProfilePageController(
         if(id == user.id) {
             dataClient.putUser(id, profileBody)
         } else {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this profile")
+            throw HttpAuthorizationException("Cannot update this profile")
         }
 
         return IdViewDTO(id);

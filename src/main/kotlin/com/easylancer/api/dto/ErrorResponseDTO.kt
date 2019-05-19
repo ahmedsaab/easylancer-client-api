@@ -3,7 +3,7 @@ package com.easylancer.api.dto
 import com.fasterxml.jackson.databind.JsonNode
 
 /**
- * Error DTO, to be sent as response body
+ * Error DTO, to be sent as responseError body
  * in case of errors
  */
 

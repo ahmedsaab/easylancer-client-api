@@ -1,25 +1,22 @@
 package com.easylancer.api.filters
 
+import com.easylancer.api.exceptions.http.HttpBadRequestException
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.apache.logging.log4j.core.config.Order
 import org.reactivestreams.Publisher
 import org.springframework.core.io.buffer.DataBuffer
 import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator
 import org.springframework.http.server.reactive.ServerHttpResponse
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator
-import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.ServerWebExchangeDecorator
-import org.springframework.web.server.WebFilter
-import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toMono
 
 import java.io.ByteArrayOutputStream
 import java.nio.channels.Channels
-
 
 fun decorateWithBodyLoaders(exchange: ServerWebExchange): ServerWebExchange {
     val decoratedRequest = object : ServerHttpRequestDecorator(exchange.request) {
@@ -30,8 +27,12 @@ fun decorateWithBodyLoaders(exchange: ServerWebExchange): ServerWebExchange {
                 Channels.newChannel(byteStream).write(it.asByteBuffer().asReadOnlyBuffer())
                 it
             }.doOnComplete {
-                //TODO: handle JsonParseException from readTree
-                exchange.attributes["request-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
+                try {
+                    exchange.attributes["request-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
+                } catch (e: JsonParseException) {
+                    exchange.attributes["request-body-json"] = byteStream.toString()
+                    throw HttpBadRequestException("invalid json body");
+                }
             }
         }
     }
@@ -47,7 +48,7 @@ fun decorateWithBodyLoaders(exchange: ServerWebExchange): ServerWebExchange {
                 super.writeWith(body)
             }.doOnSuccess {
                 //TODO: handle JsonParseException from readTree
-                exchange.attributes["response-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
+                exchange.attributes["responseError-body-json"] = jacksonObjectMapper().readTree(byteStream.toByteArray())
             }
         }
     }
@@ -59,13 +60,5 @@ fun decorateWithBodyLoaders(exchange: ServerWebExchange): ServerWebExchange {
         override fun getResponse(): ServerHttpResponse {
             return decoratedResponse
         }
-    }
-}
-
-@Component
-@Order(1)
-class BodyLoaderWebFilter : WebFilter {
-    override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
-        return chain.filter(decorateWithBodyLoaders(exchange))
     }
 }

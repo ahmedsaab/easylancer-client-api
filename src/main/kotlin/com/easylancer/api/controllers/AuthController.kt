@@ -17,7 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @RequestMapping("/auth")
 @RestController
 @FlowPreview
-class LoginSignupController(
+class AuthController(
         @Autowired private val eventEmitter: EventEmitter,
         @Autowired private val dataClient: RestClient,
         @Autowired private val passwordEncoder: PasswordEncoder

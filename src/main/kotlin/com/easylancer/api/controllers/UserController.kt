@@ -4,6 +4,7 @@ import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.*
 import com.easylancer.api.dto.*
+import com.easylancer.api.exceptions.http.HttpAuthorizationException
 import com.easylancer.api.security.User
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.server.ResponseStatusException
 
@@ -33,7 +35,7 @@ class UserController(
             @AuthenticationPrincipal user: User
     ) : ViewUserDTO {
         if(id != user.id) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot view this user")
+            throw HttpAuthorizationException("Cannot view this user")
         }
         val userDto: UserDTO = dataClient.getUser(id)
 
@@ -74,7 +76,7 @@ class UserController(
             @AuthenticationPrincipal user: User
     ) : IdViewDTO {
         if(id != user.id) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this user")
+            throw HttpAuthorizationException("Cannot edit this user")
         }
         val userBody = mapper.valueToTree<ObjectNode>(userDto)
         dataClient.putUser(id, userBody)

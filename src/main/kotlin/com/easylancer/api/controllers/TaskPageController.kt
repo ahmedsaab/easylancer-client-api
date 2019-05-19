@@ -4,8 +4,11 @@ import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.FullTaskDTO
 import com.easylancer.api.data.dto.TaskDTO
+import com.easylancer.api.data.exceptions.DataApiBadRequestException
 import com.easylancer.api.data.exceptions.DataApiResponseException
 import com.easylancer.api.dto.*
+import com.easylancer.api.exceptions.http.HttpAuthorizationException
+import com.easylancer.api.exceptions.http.HttpBadRequestException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.easylancer.api.security.User
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -15,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.server.ResponseStatusException
 
 @RestController
 @FlowPreview
@@ -30,12 +32,15 @@ class TaskPageController(
             @RequestBody taskDto: CreateTaskDTO,
             @AuthenticationPrincipal user: User
     ) : IdViewDTO {
-        val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
-        taskBody.put("creatorUser", user.id);
+        try {
+            val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
+                    .put("creatorUser", user.id)
+            val task: TaskDTO = dataClient.postTask(taskBody)
 
-        val task: TaskDTO = dataClient.postTask(taskBody)
-
-        return task.toIdDTO();
+            return task.toIdDTO();
+        } catch(e: DataApiBadRequestException) {
+            throw HttpBadRequestException("Invalid task parameters", e, e.invalidParams)
+        }
     }
 
     @GetMapping("/{id}/view")
@@ -45,6 +50,7 @@ class TaskPageController(
     ) : DetailViewTaskDTO {
         try {
             val task: FullTaskDTO = dataClient.getFullTask(id)
+
             eventEmitter.taskSeenByUser(id, user.id)
 
             return if(task.creatorUser._id == user.id) {
@@ -55,7 +61,7 @@ class TaskPageController(
                 task.toViewerViewTaskDTO()
             }
         } catch (e: DataApiResponseException) {
-            if(e.response.statusCode == HttpStatus.NOT_FOUND.value()) {
+            if(e.responseError.statusCode == HttpStatus.NOT_FOUND.value()) {
                 throw HttpNotFoundException("Task not found")
             }
             throw e
@@ -90,7 +96,7 @@ class TaskPageController(
         if(task.creatorUser == user.id) {
             dataClient.putTask(id, taskBody)
         } else {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot update this task")
+            throw HttpAuthorizationException("Cannot update this task")
         }
 
         return IdViewDTO(id);
@@ -121,7 +127,7 @@ class TaskPageController(
         val taskBody = mapper.createObjectNode();
 
         if (task.creatorUser != user.id) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot accept offers for this task")
+            throw HttpAuthorizationException("Cannot accept offers for this task")
         }
 
         taskBody.put("acceptedOffer", offerDto.id)
@@ -139,7 +145,7 @@ class TaskPageController(
         val taskBody = mapper.createObjectNode();
 
         if (task.workerUser != user.id) {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot start this task")
+            throw HttpAuthorizationException("Cannot start this task")
         }
         taskBody.put("status", "in-progress")
         dataClient.putTask(id, taskBody)
@@ -165,7 +171,7 @@ class TaskPageController(
                 taskBody.set("workerRating", reviewBody)
             }
             else -> {
-                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cannot review this task")
+                throw HttpAuthorizationException("Cannot review this task")
             }
         }
         dataClient.putTask(id, taskBody)

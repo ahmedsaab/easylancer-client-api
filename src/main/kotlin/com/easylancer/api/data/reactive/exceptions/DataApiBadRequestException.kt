@@ -1,4 +1,4 @@
-package com.easylancer.api.data.exceptions
+package com.easylancer.api.data.reactive.exceptions
 
 import com.easylancer.api.data.http.DataResponseError
 import com.easylancer.api.data.http.DataRequest
@@ -9,14 +9,18 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 class DataApiBadRequestException(
-        message: String, dataRequest: DataRequest,
-        val dataResponseError: DataResponseError,
+        message: String,
+        request: DataRequest,
+        override val response: DataResponseError,
         cause: Exception? = null
-): DataApiException(message, dataRequest, dataResponseError, cause) {
-    val invalidParams: JsonNode = if (dataResponseError.statusCode != 400 || dataResponseError.body !is DataResponseErrorDTO)
-        jacksonObjectMapper().createObjectNode() else cleanInvalidParamsArray(dataResponseError.body.message)
+): DataApiException(message, request, response, cause) {
+    val invalidParams: JsonNode =
+            if (response.statusCode != 400 || response.body !is DataResponseErrorDTO)
+                jacksonObjectMapper().createObjectNode()
+            else
+                cleanInvalidParamsArray(response.body.message)
 
-    constructor(message: String, e: DataApiResponseException): this(message, e.dataRequest, e.dataResponseError, e)
+    constructor(message: String, e: DataApiResponseException): this(message, e.request, e.response, e)
 
     private fun cleanInvalidParamsArray(node: JsonNode): ArrayNode {
         val paramsArray = jacksonObjectMapper().createArrayNode();

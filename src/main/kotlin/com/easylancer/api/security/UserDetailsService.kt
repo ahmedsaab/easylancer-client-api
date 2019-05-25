@@ -4,13 +4,13 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import com.easylancer.api.data.RestClient
-import com.easylancer.api.data.exceptions.DataApiNotFoundException
+import com.easylancer.api.data.blocking.DataApiClient
+import com.easylancer.api.data.blocking.exceptions.DataApiNotFoundException
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.security.core.userdetails.ReactiveUserDetailsPasswordService
 
 @Service
-class UserDetailsService(private val client: RestClient) : ReactiveUserDetailsService, ReactiveUserDetailsPasswordService {
+class UserDetailsService(private val client: DataApiClient) : ReactiveUserDetailsService, ReactiveUserDetailsPasswordService {
 
     override fun findByUsername(username: String): Mono<UserDetails> {
         return try {

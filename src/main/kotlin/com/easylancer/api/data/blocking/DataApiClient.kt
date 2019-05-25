@@ -1,7 +1,7 @@
-package com.easylancer.api.data
+package com.easylancer.api.data.blocking
 
 import com.easylancer.api.data.dto.*
-import com.easylancer.api.data.exceptions.*
+import com.easylancer.api.data.blocking.exceptions.*
 import com.easylancer.api.data.http.DataResponseError
 import com.easylancer.api.data.http.DataResponse
 import com.easylancer.api.data.http.DataResponseSuccess
@@ -17,7 +17,7 @@ import org.springframework.web.client.*
 
 
 
-class RestClient(@Autowired private val restTemplate: RestTemplate) {
+class DataApiClient(@Autowired private val restTemplate: RestTemplate) {
 
     private val mapper: ObjectMapper = jacksonObjectMapper()
 

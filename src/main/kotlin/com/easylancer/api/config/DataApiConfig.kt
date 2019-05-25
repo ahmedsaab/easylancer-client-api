@@ -5,4 +5,4 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConfigurationProperties("data.api")
-data class DataApi(var url: String = "http://localhost", var port: Int = 3000)
+data class DataApiConfig(var url: String = "http://localhost", var port: Int = 3000)

@@ -29,7 +29,7 @@ class ErrorResponseDTOComposer {
             ErrorResponseDTO(
                     status = 400,
                     message = "The following params are invalid or missing",
-                    data=jacksonObjectMapper().valueToTree<ArrayNode>(invalidParams)
+                    data = jacksonObjectMapper().valueToTree<ArrayNode>(invalidParams)
             )
         } else if (ex is ResponseStatusException){
             ErrorResponseDTO(
@@ -42,5 +42,13 @@ class ErrorResponseDTOComposer {
                     message = "Internal Server Error"
             )
         }
+    }
+
+    fun composeDev(ex: Throwable): ErrorResponseDTO {
+        return ErrorResponseDTO(
+                status = 500,
+                data = jacksonObjectMapper().valueToTree(ex::class.java.simpleName),
+                message = ex.message?: null.toString()
+        )
     }
 }

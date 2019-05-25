@@ -7,14 +7,14 @@ import org.springframework.http.HttpHeaders
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.reactive.function.client.WebClient
 
-import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.exceptions.ErrorResponseDTOComposer
 import org.springframework.beans.factory.annotation.Autowired
-
+import org.springframework.web.reactive.config.EnableWebFlux
 
 @Configuration
-class Config(@Autowired private val config: DataApi) {
+@EnableWebFlux
+class GeneralConfig(@Autowired private val config: DataApiConfig) {
     val apiUrl = "${config.url}:${config.port}"
 
     @Bean
@@ -29,16 +29,16 @@ class Config(@Autowired private val config: DataApi) {
                 .build()
     }
     @Bean
-    fun dataApiClient(restTemplate: RestTemplate): RestClient {
-        return RestClient(restTemplate)
+    fun bClient(restTemplate: RestTemplate): com.easylancer.api.data.blocking.DataApiClient {
+        return com.easylancer.api.data.blocking.DataApiClient(restTemplate)
     }
     @Bean
-    fun eventEmitter(restClient: RestClient): EventEmitter {
-        return EventEmitter(restClient)
+    fun dClient(webClient: WebClient): com.easylancer.api.data.reactive.DataApiClient {
+        return com.easylancer.api.data.reactive.DataApiClient(webClient)
     }
     @Bean
-    fun currentUserId(): String {
-        return "5cc202a12cc2241945bca94f"
+    fun eventEmitter(dataApiClient: com.easylancer.api.data.blocking.DataApiClient): EventEmitter {
+        return EventEmitter(dataApiClient)
     }
     @Bean
     fun errorResponseComposer(): ErrorResponseDTOComposer {

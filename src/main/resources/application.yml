@@ -8,6 +8,16 @@ spring:
       write_durations_as_timestamps: false
   application:
     name: easylancer-client-api
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
+okta:
+  oauth2:
+    issuer: https://dev-374454.okta.com/oauth2/default
+    client-id: 0oan2h4dm1Bo4VHJZ356
+    client-secret: VRyx2O0VN2HWd5BAYKqbmnX-AyDQxOIBdgr8T9O0
+    redirect-uri: /auth/callback
 
 logging:
   level:

@@ -1,4 +1,4 @@
-package com.easylancer.api.data.exceptions
+package com.easylancer.api.data.blocking.exceptions
 
 import com.easylancer.api.data.http.DataRequest
 import org.springframework.web.client.RestClientException

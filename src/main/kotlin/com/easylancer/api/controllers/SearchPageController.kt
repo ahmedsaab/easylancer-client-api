@@ -1,10 +1,8 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.TaskDTO
 import com.easylancer.api.dto.*
-import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
@@ -14,11 +12,11 @@ import org.springframework.web.bind.annotation.*
 @RestController
 class SearchPageController(
         @Autowired val eventEmitter: EventEmitter,
-        @Autowired val dataClient: RestClient
+        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient
 ) {
     @GetMapping("/all")
     suspend fun viewAllTasks() : List<ListViewTaskDTO> {
-        val tasks: Array<TaskDTO> = dataClient.getAllTasks();
+        val tasks: Array<TaskDTO> = bClient.getAllTasks();
 
         return tasks.map { it.toListViewTaskDTO() }
     }
@@ -26,7 +24,7 @@ class SearchPageController(
     // TODO: implement filter on API
     @GetMapping("/open")
     suspend fun viewOpenTasks() : List<ListViewTaskDTO> {
-        val tasks: Array<TaskDTO> = dataClient.getAllTasks();
+        val tasks: Array<TaskDTO> = bClient.getAllTasks();
 
         return tasks.map { it.toListViewTaskDTO() }
     }

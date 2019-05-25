@@ -1,12 +1,10 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.*
 import com.easylancer.api.dto.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
@@ -18,7 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 @RestController
 class AuthController(
         @Autowired private val eventEmitter: EventEmitter,
-        @Autowired private val dataClient: RestClient,
+        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient,
         @Autowired private val passwordEncoder: PasswordEncoder
 ) {
     private var mapper: ObjectMapper = jacksonObjectMapper();
@@ -33,8 +31,13 @@ class AuthController(
         val userBody = mapper.valueToTree<ObjectNode>(userDto)
         userBody.put("password", passwordEncoder.encode(userDto.password))
 
-        val user: UserDTO = dataClient.postUser(userBody)
+        val user: UserDTO = bClient.postUser(userBody)
 
         return user.toViewUserDTO();
+    }
+
+    @GetMapping("/callback")
+    suspend fun callback(): String {
+        return "heloo"
     }
 }

@@ -25,7 +25,7 @@ class WebExceptionHandler(
             ex.printStackTrace()
         }
 
-        val errorResponseDto = errorResponseDTOComposer.compose(ex)
+        val errorResponseDto = errorResponseDTOComposer.composeDev(ex)
         val dataBuffer = DefaultDataBufferFactory().wrap(
                 jacksonObjectMapper().writeValueAsBytes(errorResponseDto)
         )

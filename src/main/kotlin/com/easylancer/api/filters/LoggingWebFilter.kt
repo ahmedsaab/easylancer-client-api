@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 
 //@Component
 class LoggingWebFilter : WebFilter {
-    val logger: Logger = LoggerFactory.getLogger("simple-logger")
+   private val logger: Logger = LoggerFactory.getLogger("simple-logger")
 
     // TODO: create a data class for the log object
     private fun createLogJson(exchange: ServerWebExchange) : JsonNode {
@@ -82,9 +82,8 @@ class LoggingWebFilter : WebFilter {
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         val startTime = System.currentTimeMillis()
 
-        return chain.filter(decorateWithBodyLoaders(exchange)).doOnTerminate {
+        return chain.filter(decorateWithBodyLoaders(exchange)).doFinally {
             exchange.attributes["execution-time"] = System.currentTimeMillis() - startTime
-        }.doFinally {
             logger.info(createLogJson(exchange).toString())
         }
     }

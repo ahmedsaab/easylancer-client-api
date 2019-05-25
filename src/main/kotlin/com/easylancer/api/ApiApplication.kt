@@ -4,10 +4,9 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.web.reactive.config.EnableWebFlux
 import javax.annotation.PreDestroy
 import javax.annotation.PostConstruct
-
-
 
 @SpringBootApplication
 class ApiApplication {

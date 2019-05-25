@@ -1,11 +1,10 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.RestClient
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.dto.FullTaskDTO
 import com.easylancer.api.data.dto.TaskDTO
-import com.easylancer.api.data.exceptions.DataApiBadRequestException
-import com.easylancer.api.data.exceptions.DataApiResponseException
+import com.easylancer.api.data.blocking.exceptions.DataApiBadRequestException
+import com.easylancer.api.data.blocking.exceptions.DataApiResponseException
 import com.easylancer.api.dto.*
 import com.easylancer.api.exceptions.http.HttpAuthorizationException
 import com.easylancer.api.exceptions.http.HttpBadRequestException
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/tasks")
 class TaskPageController(
         @Autowired val eventEmitter: EventEmitter,
-        @Autowired val dataClient: RestClient
+        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient
 ) {
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
@@ -37,7 +36,7 @@ class TaskPageController(
         try {
             val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
                     .put("creatorUser", user.id)
-            val task: TaskDTO = dataClient.postTask(taskBody)
+            val task: TaskDTO = bClient.postTask(taskBody)
 
             return task.toIdDTO();
         } catch(e: DataApiBadRequestException) {
@@ -51,7 +50,7 @@ class TaskPageController(
             @AuthenticationPrincipal user: User
     ) : DetailViewTaskDTO {
         try {
-            val task: FullTaskDTO = dataClient.getFullTask(id)
+            val task: FullTaskDTO = bClient.getFullTask(id)
 
             eventEmitter.taskSeenByUser(id, user.id)
 
@@ -76,8 +75,8 @@ class TaskPageController(
             @PathVariable("id") id: String,
             @AuthenticationPrincipal user: User
     ) : List<ViewOfferDTO> = coroutineScope {
-        val offersAsync = async { dataClient.getTaskOffers(id) }
-        val taskAsync = async { dataClient.getTask(id) }
+        val offersAsync = async { bClient.getTaskOffers(id) }
+        val taskAsync = async { bClient.getTask(id) }
 
         offersAsync.await().filter {
             it.workerUser._id == user.id || taskAsync.await().creatorUser == user.id
@@ -93,10 +92,10 @@ class TaskPageController(
             @AuthenticationPrincipal user: User
     ) : IdViewDTO {
         val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
-        val task = dataClient.getTask(id)
+        val task = bClient.getTask(id)
 
         if(task.creatorUser == user.id) {
-            dataClient.putTask(id, taskBody)
+            bClient.putTask(id, taskBody)
         } else {
             throw HttpAuthorizationException("Cannot update this task")
         }
@@ -114,7 +113,7 @@ class TaskPageController(
 
         offerBody.put("task", id)
         offerBody.put("workerUser", user.id)
-        val offer = dataClient.postOffer(offerBody)
+        val offer = bClient.postOffer(offerBody)
 
         return offer.toIdDTO();
     }
@@ -125,7 +124,7 @@ class TaskPageController(
             @RequestBody offerDto: AcceptOfferDTO,
             @AuthenticationPrincipal user: User
     ) : IdViewDTO {
-        val task = dataClient.getTask(id)
+        val task = bClient.getTask(id)
         val taskBody = mapper.createObjectNode();
 
         if (task.creatorUser != user.id) {
@@ -133,7 +132,7 @@ class TaskPageController(
         }
 
         taskBody.put("acceptedOffer", offerDto.id)
-        dataClient.putTask(id, taskBody)
+        bClient.putTask(id, taskBody)
 
         return task.toIdDTO();
     }
@@ -143,14 +142,14 @@ class TaskPageController(
             @PathVariable("id") id: String,
             @AuthenticationPrincipal user: User
     ) : IdViewDTO {
-        val task = dataClient.getTask(id)
+        val task = bClient.getTask(id)
         val taskBody = mapper.createObjectNode();
 
         if (task.workerUser != user.id) {
             throw HttpAuthorizationException("Cannot start this task")
         }
         taskBody.put("status", "in-progress")
-        dataClient.putTask(id, taskBody)
+        bClient.putTask(id, taskBody)
 
         return task.toIdDTO();
     }
@@ -161,7 +160,7 @@ class TaskPageController(
             @RequestBody reviewDto: CreateTaskReviewDTO,
             @AuthenticationPrincipal user: User
     ): IdViewDTO {
-        val task: TaskDTO = dataClient.getTask(id)
+        val task: TaskDTO = bClient.getTask(id)
         val reviewBody = mapper.valueToTree<ObjectNode>(reviewDto);
         val taskBody = mapper.createObjectNode();
 
@@ -176,7 +175,7 @@ class TaskPageController(
                 throw HttpAuthorizationException("Cannot review this task")
             }
         }
-        dataClient.putTask(id, taskBody)
+        bClient.putTask(id, taskBody)
 
         return IdViewDTO(id)
     }

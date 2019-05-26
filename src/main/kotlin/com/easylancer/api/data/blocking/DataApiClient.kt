@@ -21,41 +21,41 @@ class DataApiClient(@Autowired private val restTemplate: RestTemplate) {
 
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
-    private fun wrapException(e: Exception, dataRequest: DataRequest): DataApiException {
+    private fun wrapException(e: Exception, request: DataRequest): DataApiException {
         when(e) {
             is RestClientResponseException -> {
                 throw DataApiResponseException(
-                        message = "Received ${e.rawStatusCode} error dataResponseError from Data API",
-                        dataRequest = dataRequest,
-                        dataResponseError = getResponseFromResponseException(e),
+                        message = "Received ${e.rawStatusCode} error response from Data API",
+                        request = request,
+                        response = getResponseFromResponseException(e),
                         error = e
                 )
             }
             is ResourceAccessException -> {
                 throw DataApiNetworkException(
                         message = "Could not access Data API",
-                        dataRequest = dataRequest,
+                        request = request,
                         error = e
                 )
             }
             is RestClientException -> {
                 if(e.cause is JsonProcessingException) {
                     throw DataApiUnexpectedResponseException(
-                            message = "Failed to transform success dataResponseError body from Data API",
-                            dataRequest = dataRequest,
+                            message = "Failed to transform success response body from Data API",
+                            request = request,
                             error = e
                     )
                 }
                 throw DataApiUnhandledException(
                         message = "Unhandled exception occurred calling the Data API",
-                        dataRequest = dataRequest,
+                        request = request,
                         error = e
                 )
             }
             is JsonProcessingException -> {
                 throw DataApiUnexpectedResponseException(
-                        message = "Failed to transform success dataResponseError payload returned from Data API",
-                        dataRequest = dataRequest,
+                        message = "Failed to transform success response payload returned from Data API",
+                        request = request,
                         error = e
                 )
             }
@@ -99,7 +99,7 @@ class DataApiClient(@Autowired private val restTemplate: RestTemplate) {
             if (response.body.data.get(0) == null) {
                 throw DataApiNotFoundException(
                         message = "Couldn't find at-least one element from Data API",
-                        dataRequest = request,
+                        request = request,
                         response = response
                 )
             }
@@ -147,7 +147,7 @@ class DataApiClient(@Autowired private val restTemplate: RestTemplate) {
         try {
             return get("/users/$id")
         } catch (e: DataApiResponseException) {
-            if (e.dataResponseError.statusCode == 404) {
+            if (e.response.statusCode == 404) {
                 throw DataApiNotFoundException("No user found with this id", e)
             }
             throw e
@@ -186,7 +186,7 @@ class DataApiClient(@Autowired private val restTemplate: RestTemplate) {
         try {
             return post("/tasks", task)
         } catch (e: DataApiResponseException) {
-            if (e.dataResponseError.statusCode == 400) {
+            if (e.response.statusCode == 400) {
                 throw DataApiBadRequestException("Invalid task body", e)
             }
             throw e

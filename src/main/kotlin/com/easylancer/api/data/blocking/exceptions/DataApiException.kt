@@ -7,14 +7,14 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 abstract class DataApiException(
         override val message: String,
-        open val dataRequest: DataRequest,
+        open val request: DataRequest,
         open val response: DataResponse? = null,
         private val error: Exception? = null
 ) : RuntimeException(message, error) {
     fun toLogJson(): JsonNode {
         val log = jacksonObjectMapper().createObjectNode()
-        log.set("dataRequest", jacksonObjectMapper().valueToTree(dataRequest))
-        log.set("dataResponseError", jacksonObjectMapper().valueToTree(response))
+        log.set("request", jacksonObjectMapper().valueToTree(request))
+        log.set("response", jacksonObjectMapper().valueToTree(response))
         log.put("message", error?.message)
         return log
     }

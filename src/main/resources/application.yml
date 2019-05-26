@@ -11,13 +11,11 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-
-okta:
-  oauth2:
-    issuer: https://dev-374454.okta.com/oauth2/default
-    client-id: 0oan2h4dm1Bo4VHJZ356
-    client-secret: VRyx2O0VN2HWd5BAYKqbmnX-AyDQxOIBdgr8T9O0
-    redirect-uri: /auth/callback
+  security:
+    oauth2:
+      resourceserver:
+        jwk:
+          issuer-uri: https://easylancer.eu.auth0.com/
 
 logging:
   level:
@@ -29,5 +27,5 @@ logging:
 
 data:
   api:
-    server: "http://localhost"
+    server: http://localhost
     port: 3000

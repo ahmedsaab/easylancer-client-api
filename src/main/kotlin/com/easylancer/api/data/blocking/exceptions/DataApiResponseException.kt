@@ -6,7 +6,7 @@ import org.springframework.web.client.RestClientResponseException
 
 class DataApiResponseException(
         message: String,
-        override val dataRequest: DataRequest,
-        val dataResponseError: DataResponseError,
+        override val request: DataRequest,
+        override val response: DataResponseError,
         error: RestClientResponseException? = null
-): DataApiException(message, dataRequest, dataResponseError, error)
+): DataApiException(message, request, response, error)

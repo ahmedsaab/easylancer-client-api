@@ -18,6 +18,7 @@ import kotlinx.coroutines.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -47,22 +48,22 @@ class TaskPageController(
     @GetMapping("/{id}/view")
     suspend fun viewTask(
             @PathVariable("id") id: String,
-            @AuthenticationPrincipal user: User
+            @AuthenticationPrincipal oAuth2User: OAuth2User
     ) : DetailViewTaskDTO {
         try {
             val task: FullTaskDTO = bClient.getFullTask(id)
 
-            eventEmitter.taskSeenByUser(id, user.id)
+            eventEmitter.taskSeenByUser(id, oAuth2User.name)
 
-            return if(task.creatorUser._id == user.id) {
+            return if(task.creatorUser._id == oAuth2User.name) {
                 task.toOwnerViewTaskDTO()
-            } else if (task.workerUser != null && task.workerUser._id == user.id){
+            } else if (task.workerUser != null && task.workerUser._id == oAuth2User.name){
                 task.toWorkerViewTaskDTO()
             } else {
                 task.toViewerViewTaskDTO()
             }
         } catch (e: DataApiResponseException) {
-            if(e.dataResponseError.statusCode == HttpStatus.NOT_FOUND.value()) {
+            if(e.response.statusCode == HttpStatus.NOT_FOUND.value()) {
                 throw HttpNotFoundException("Task not found")
             }
             throw e

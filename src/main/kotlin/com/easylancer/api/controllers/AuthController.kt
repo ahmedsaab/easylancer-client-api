@@ -21,9 +21,9 @@ class AuthController(
 ) {
     private var mapper: ObjectMapper = jacksonObjectMapper();
 
-    @PostMapping("/log-in")
-    suspend fun loginUser(@RequestBody loginDto: Any) {
-
+    @GetMapping("/login")
+    suspend fun loginUser(@RequestParam params: Map<String,String>): Map<String,String> {
+        return params
     }
 
     @PostMapping("/sign-up")
@@ -34,10 +34,5 @@ class AuthController(
         val user: UserDTO = bClient.postUser(userBody)
 
         return user.toViewUserDTO();
-    }
-
-    @GetMapping("/callback")
-    suspend fun callback(): String {
-        return "heloo"
     }
 }

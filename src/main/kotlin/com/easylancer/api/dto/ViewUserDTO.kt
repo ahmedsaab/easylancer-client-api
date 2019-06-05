@@ -14,7 +14,6 @@ data class ViewUserDTO(
         val gender: String?,
         val city: String?,
         val id: String,
-        val email: String,
         val birthDate: Date?,
         val phoneNumber: String?,
         val settings: UserSettingsDTO

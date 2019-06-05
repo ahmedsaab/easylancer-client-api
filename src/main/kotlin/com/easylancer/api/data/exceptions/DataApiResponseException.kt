@@ -1,4 +1,4 @@
-package com.easylancer.api.data.reactive.exceptions
+package com.easylancer.api.data.exceptions
 
 import com.easylancer.api.data.http.DataResponseError
 import com.easylancer.api.data.http.DataRequest

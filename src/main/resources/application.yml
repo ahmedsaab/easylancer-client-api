@@ -28,4 +28,4 @@ logging:
 data:
   api:
     server: http://localhost
-    port: 3000
+    port: 3003

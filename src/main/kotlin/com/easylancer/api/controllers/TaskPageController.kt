@@ -1,184 +1,176 @@
 package com.easylancer.api.controllers
 
 import com.easylancer.api.data.EventEmitter
-import com.easylancer.api.data.dto.FullTaskDTO
-import com.easylancer.api.data.dto.TaskDTO
-import com.easylancer.api.data.blocking.exceptions.DataApiBadRequestException
-import com.easylancer.api.data.blocking.exceptions.DataApiResponseException
+import com.easylancer.api.data.DataApiClient
+import com.easylancer.api.data.exceptions.DataApiBadRequestException
+import com.easylancer.api.data.exceptions.DataApiNotFoundException
 import com.easylancer.api.dto.*
-import com.easylancer.api.exceptions.http.HttpAuthorizationException
 import com.easylancer.api.exceptions.http.HttpBadRequestException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
-import com.easylancer.api.security.User
+import com.easylancer.api.helpers.toJson
+import com.easylancer.api.security.UserPrincipal
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.*
 
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
-import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
+@CrossOrigin()
 @RequestMapping("/tasks")
 class TaskPageController(
         @Autowired val eventEmitter: EventEmitter,
-        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient
+        @Autowired private val client: DataApiClient
 ) {
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
     @PostMapping("/create")
-    suspend fun createTask(
+    fun createTask(
             @RequestBody taskDto: CreateTaskDTO,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        try {
-            val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
-                    .put("creatorUser", user.id)
-            val task: TaskDTO = bClient.postTask(taskBody)
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<ListViewTaskDTO> {
+        val taskBody = taskDto.toJson()
+                .put("creatorUser", user.id)
 
-            return task.toIdDTO();
-        } catch(e: DataApiBadRequestException) {
-            throw HttpBadRequestException("Invalid task parameters", e, e.invalidParams)
+        return client.postTask(taskBody).map { task ->
+            task.toListViewTaskDTO()
+        }.onErrorMap { e ->
+            if (e is DataApiBadRequestException)
+                HttpBadRequestException("Sorry can't do, please send a valid task data!", e, e.invalidParams)
+            else e
         }
     }
 
     @GetMapping("/{id}/view")
-    suspend fun viewTask(
+    fun viewTask(
             @PathVariable("id") id: String,
-            @AuthenticationPrincipal oAuth2User: OAuth2User
-    ) : DetailViewTaskDTO {
-        try {
-            val task: FullTaskDTO = bClient.getFullTask(id)
-
-            eventEmitter.taskSeenByUser(id, oAuth2User.name)
-
-            return if(task.creatorUser._id == oAuth2User.name) {
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<DetailViewTaskDTO> {
+        return client.getFullTask(id).doOnSuccess {
+            eventEmitter.taskSeenByUser(id, user.id)
+        }.map { task ->
+            if(task.creatorUser._id == user.id) {
                 task.toOwnerViewTaskDTO()
-            } else if (task.workerUser != null && task.workerUser._id == oAuth2User.name){
+            } else if (task.workerUser != null && task.workerUser._id == user.id) {
                 task.toWorkerViewTaskDTO()
             } else {
                 task.toViewerViewTaskDTO()
             }
-        } catch (e: DataApiResponseException) {
-            if(e.response.statusCode == HttpStatus.NOT_FOUND.value()) {
-                throw HttpNotFoundException("Task not found")
+        }.onErrorMap { e ->
+            if(e is DataApiNotFoundException) {
+                HttpNotFoundException("No task found with this id", e)
+            } else {
+                e
             }
-            throw e
         }
-
     }
 
     @GetMapping("/{id}/offers")
-    suspend fun viewTaskOffers(
+    fun viewTaskOffers(
             @PathVariable("id") id: String,
-            @AuthenticationPrincipal user: User
-    ) : List<ViewOfferDTO> = coroutineScope {
-        val offersAsync = async { bClient.getTaskOffers(id) }
-        val taskAsync = async { bClient.getTask(id) }
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Flux<ViewOfferDTO> {
+        return client.getTask(id)
+                .zipWith(client.getTaskOffers(id).collectList())
+                .flatMapIterable { tuple ->
+                    val isOwner = tuple.t1.creatorUser == user.id
 
-        offersAsync.await().filter {
-            it.workerUser._id == user.id || taskAsync.await().creatorUser == user.id
-        }.map {
-            it.toViewOfferDTO()
+                    tuple.t2.map { offer ->
+                        offer.toViewOfferDTO()
+                    }.filter { offer ->
+                        isOwner || offer.workerUser.id == user.id
+                    }
+                }
+    }
+
+    @PostMapping("/{id}/apply")
+    fun applyToTask(
+            @PathVariable("id") id: String,
+            @RequestBody offerDto: CreateOfferDTO,
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<IdViewDTO> {
+        return client.postOffer(
+                offerDto.toJson()
+                        .put("task", id)
+                        .put("workerUser", user.id)
+        ).map { offer ->
+            offer.toIdDTO()
         }
     }
 
     @PutMapping("/{id}/edit")
-    suspend fun updateTask(
+    @PreAuthorize("hasAuthority('task:owner:' + #id)")
+    fun updateTask(
             @PathVariable("id") id: String,
             @RequestBody taskDto: UpdateTaskDTO,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        val taskBody = mapper.valueToTree<ObjectNode>(taskDto)
-        val task = bClient.getTask(id)
-
-        if(task.creatorUser == user.id) {
-            bClient.putTask(id, taskBody)
-        } else {
-            throw HttpAuthorizationException("Cannot update this task")
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<ListViewTaskDTO> {
+        return client.putTask(id, taskDto).map { task ->
+            task.toListViewTaskDTO()
         }
-
-        return IdViewDTO(id);
-    }
-
-    @PostMapping("/{id}/apply")
-    suspend fun applyToTask(
-            @PathVariable("id") id: String,
-            @RequestBody offerDto: CreateOfferDTO,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        val offerBody = mapper.valueToTree<ObjectNode>(offerDto);
-
-        offerBody.put("task", id)
-        offerBody.put("workerUser", user.id)
-        val offer = bClient.postOffer(offerBody)
-
-        return offer.toIdDTO();
     }
 
     @PostMapping("/{id}/accept")
-    suspend fun acceptOfferToTask(
+    @PreAuthorize("hasAuthority('task:owner:' + #id)")
+    fun acceptOfferToTask(
             @PathVariable("id") id: String,
             @RequestBody offerDto: AcceptOfferDTO,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        val task = bClient.getTask(id)
-        val taskBody = mapper.createObjectNode();
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<ListViewTaskDTO> {
+        val body = mapper.createObjectNode()
+                .put("acceptedOffer", offerDto.id);
 
-        if (task.creatorUser != user.id) {
-            throw HttpAuthorizationException("Cannot accept offers for this task")
+        return client.putTask(id, body).map { task ->
+            task.toListViewTaskDTO()
         }
-
-        taskBody.put("acceptedOffer", offerDto.id)
-        bClient.putTask(id, taskBody)
-
-        return task.toIdDTO();
     }
 
     @PostMapping("/{id}/start")
-    suspend fun startTask(
+    @PreAuthorize("hasAuthority('task:worker:' + #id)")
+    fun startTask(
             @PathVariable("id") id: String,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        val task = bClient.getTask(id)
-        val taskBody = mapper.createObjectNode();
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<ListViewTaskDTO> {
+        val body = mapper.createObjectNode()
+                .put("status", "in-progress");
 
-        if (task.workerUser != user.id) {
-            throw HttpAuthorizationException("Cannot start this task")
+        return client.putTask(id, body).map { task ->
+            task.toListViewTaskDTO()
         }
-        taskBody.put("status", "in-progress")
-        bClient.putTask(id, taskBody)
-
-        return task.toIdDTO();
     }
 
-    @PostMapping("/{id}/review")
-    suspend fun reviewTask(
+    @PostMapping("/{id}/review/worker")
+    @PreAuthorize("hasAuthority('task:worker:' + #id)")
+    fun reviewTaskByWorker(
             @PathVariable("id") id: String,
             @RequestBody reviewDto: CreateTaskReviewDTO,
-            @AuthenticationPrincipal user: User
-    ): IdViewDTO {
-        val task: TaskDTO = bClient.getTask(id)
-        val reviewBody = mapper.valueToTree<ObjectNode>(reviewDto);
-        val taskBody = mapper.createObjectNode();
+            @AuthenticationPrincipal user: UserPrincipal
+    ): Mono<ListViewTaskDTO> {
+        val body = mapper.createObjectNode()
+                .set("workerRating", reviewDto.toJson());
 
-        when(user.id) {
-            task.creatorUser -> {
-                taskBody.set("creatorRating", reviewBody)
-            }
-            task.workerUser -> {
-                taskBody.set("workerRating", reviewBody)
-            }
-            else -> {
-                throw HttpAuthorizationException("Cannot review this task")
-            }
+        return client.putTask(id, body).map { task ->
+            task.toListViewTaskDTO()
         }
-        bClient.putTask(id, taskBody)
+    }
 
-        return IdViewDTO(id)
+    @PostMapping("/{id}/review/owner")
+    @PreAuthorize("hasAuthority('task:owner:' + #id)")
+    fun reviewTaskByOwner(
+            @PathVariable("id") id: String,
+            @RequestBody reviewDto: CreateTaskReviewDTO,
+            @AuthenticationPrincipal user: UserPrincipal
+    ): Mono<ListViewTaskDTO> {
+        val body = mapper.createObjectNode()
+                .set("creatorRating", reviewDto.toJson());
+
+        return client.putTask(id, body).map { task ->
+            task.toListViewTaskDTO()
+        }
     }
 
     // TODO: this is postponed after the release of 0.9.0

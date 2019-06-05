@@ -1,7 +1,6 @@
-package com.easylancer.api.data.reactive.exceptions
+package com.easylancer.api.data.exceptions
 
 import com.easylancer.api.data.http.DataRequest
-import org.springframework.web.client.RestClientException
 import java.net.ConnectException
 
 class DataApiNetworkException(

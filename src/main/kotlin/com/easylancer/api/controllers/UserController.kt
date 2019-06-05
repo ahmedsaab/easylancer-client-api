@@ -1,91 +1,77 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.EventEmitter
-import com.easylancer.api.data.dto.*
-import com.easylancer.api.data.reactive.exceptions.DataApiNotFoundException
-import com.easylancer.api.dto.*
-import com.easylancer.api.exceptions.http.HttpAuthorizationException
+import com.easylancer.api.data.DataApiClient
+import com.easylancer.api.data.exceptions.DataApiBadRequestException
+import com.easylancer.api.data.exceptions.DataApiNotFoundException
+import com.easylancer.api.exceptions.http.HttpBadRequestException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
-import com.easylancer.api.security.User
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
+import com.easylancer.api.security.UserPrincipal
+import com.easylancer.api.dto.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import reactor.core.publisher.Mono
 
-
 @RequestMapping("/users")
 @RestController
 class UserController(
-        @Autowired private val eventEmitter: EventEmitter,
-        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient,
-        @Autowired private val rClient: com.easylancer.api.data.reactive.DataApiClient
+        @Autowired private val client: DataApiClient
 ) {
-    private var mapper: ObjectMapper = jacksonObjectMapper();
-
     @GetMapping("/{id}/view")
-    @PreAuthorize("#id.equals(#user.id)")
+    @PreAuthorize("hasAuthority('user:read:' + #id)")
     fun viewUser(
             @PathVariable("id") id: String,
-            @AuthenticationPrincipal user: User
+            @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ViewUserDTO> {
-        return rClient.getUser(id)
-            .map { userDto ->
+        return client.getUser(id).map { userDto ->
                 userDto.toViewUserDTO()
-            }.onErrorMap {e ->
+            }.onErrorMap { e ->
                 if (e is DataApiNotFoundException)
                     HttpNotFoundException("no user found with this id", e)
                 else e
             }
     }
 
-
-
     @GetMapping("/{id}/tasks")
-    @PreAuthorize("#id.equals(#user.id)")
+    @PreAuthorize("hasAuthority('user:read:' + #id)")
     fun getUserRelatedTasks(
             @PathVariable("id") id: String,
-            @AuthenticationPrincipal user: User
-    ) : MyTasksViewDTO {
-        val tasks: Array<TaskDTO> = bClient.getUserRelatedTasks(id);
-        val myTasksView = MyTasksViewDTO()
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<MyTasksViewDTO> {
+        return client.getUserRelatedTasks(id).collect({ MyTasksViewDTO() }, {
+            container, task ->
+                val dto = task.toListViewTaskDTO()
 
-        tasks.forEach {
-            val task = it.toListViewTaskDTO()
-
-            if (it.workerUser == user.id) {
-                if ((it.status == "done" || it.status == "not-done")) {
-                    myTasksView.finished += task
+                if (task.workerUser == user.id) {
+                    if (task.status == "done" || task.status == "not-done") {
+                        container.finished += dto
+                    } else {
+                        container.assigned += dto
+                    }
+                } else if (task.creatorUser == user.id) {
+                    container.created += dto
                 } else {
-                    myTasksView.assigned += task
+                    container.applied += dto
                 }
-            } else if (it.creatorUser === user.id) {
-                myTasksView.created += task
-            } else {
-                myTasksView.applied += task
             }
-        }
-
-        return myTasksView
+        )
     }
 
     @PutMapping("/{id}/edit")
-    @PreAuthorize("#id.equals(#user.id)")
+    @PreAuthorize("hasAuthority('user:edit:' + #id)")
     fun updateUser(
             @PathVariable("id") id: String,
             @RequestBody userDto: UpdateUserDTO,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        if(id != user.id) {
-            throw HttpAuthorizationException("Cannot edit this user")
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<ViewUserDTO> {
+        return client.putUser(id, userDto).map { u ->
+            u.toViewUserDTO()
+        }.onErrorMap { e ->
+            if (e is DataApiBadRequestException)
+                throw HttpBadRequestException("Sorry can't do, please send a valid user data change!", e, e.invalidParams)
+            else e
         }
-        val userBody = mapper.valueToTree<ObjectNode>(userDto)
-        bClient.putUser(id, userBody)
-
-        return IdViewDTO(id);
     }
 }

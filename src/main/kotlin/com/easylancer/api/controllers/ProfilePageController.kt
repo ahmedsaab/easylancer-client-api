@@ -1,80 +1,78 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.EventEmitter
-import com.easylancer.api.data.dto.*
-import com.easylancer.api.data.blocking.exceptions.DataApiNotFoundException
+import com.easylancer.api.data.DataApiClient
+import com.easylancer.api.data.exceptions.DataApiNotFoundException
 import com.easylancer.api.dto.*
-import com.easylancer.api.exceptions.http.HttpAuthorizationException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
-import com.easylancer.api.security.User
+import com.easylancer.api.security.UserPrincipal
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RequestMapping("/profiles")
 @RestController
 class ProfilePageController(
-        @Autowired val eventEmitter: EventEmitter,
-        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient
+        @Autowired private val client: DataApiClient
 ) {
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
     @GetMapping("/{id}/view")
-    suspend fun viewProfile(@PathVariable("id") id: String) : ViewProfileDTO {
-        try {
-            val user: UserDTO = bClient.getUser(id)
-
-            return user.toViewProfileDTO();
-        } catch (e: DataApiNotFoundException) {
-            throw HttpNotFoundException("No profile found with this id", e)
+    fun viewProfile(@PathVariable("id") id: String) : Mono<ViewProfileDTO> {
+        return client.getUser(id).map {
+            it.toViewProfileDTO()
+        }.onErrorMap { e ->
+            if (e is DataApiNotFoundException)
+                HttpNotFoundException("no user found with this id", e)
+            else e
         }
     }
 
     @PutMapping("/{id}/edit")
-    suspend fun updateProfile(
+    @PreAuthorize("hasAuthority('user:edit:' + #id)")
+    fun updateProfile(
             @PathVariable("id") id: String,
             @RequestBody profileDto: UpdateProfileDTO,
-            @AuthenticationPrincipal user: User
-    ) : IdViewDTO {
-        val profileBody = mapper.valueToTree<ObjectNode>(profileDto)
-
-        if(id == user.id) {
-            bClient.putUser(id, profileBody)
-        } else {
-            throw HttpAuthorizationException("Cannot update this profile")
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<ViewProfileDTO> {
+        return client.putUser(id, profileDto).map {
+            it.toViewProfileDTO()
+        }.onErrorMap { e ->
+            if (e is DataApiNotFoundException)
+                HttpNotFoundException("no user found with this id", e)
+            else e
         }
-
-        return IdViewDTO(id);
     }
 
     @GetMapping("/{id}/tasks/finished")
-    suspend fun listUserAssignedTasks(@PathVariable("id") id: String) : List<ListViewTaskDTO> {
-        val tasks: Array<TaskDTO> = bClient.getUserFinishedTasks(id);
-
-        return tasks.map { it.toListViewTaskDTO() }
+    fun listUserAssignedTasks(@PathVariable("id") id: String) : Flux<ListViewTaskDTO> {
+        return client.getUserFinishedTasks(id).map {
+            it.toListViewTaskDTO()
+        };
     }
 
     @GetMapping("/{id}/tasks/created")
-    suspend fun listUserCreatedTasks(@PathVariable("id") id: String) : List<ListViewTaskDTO> {
-        val tasks: Array<TaskDTO> = bClient.getUserCreatedTasks(id);
-
-        return tasks.map { it.toListViewTaskDTO() }
+    fun listUserCreatedTasks(@PathVariable("id") id: String): Flux<ListViewTaskDTO> {
+        return client.getUserCreatedTasks(id).map {
+            it.toListViewTaskDTO()
+        };
     }
 
     @GetMapping("/{id}/reviews")
-    suspend fun listUserTaskReviews(@PathVariable("id") id: String): List<ListViewTaskRatingDTO> {
-        val tasks: Array<FullTaskRatingDTO> = bClient.getUserReviews(id);
-
-        return tasks.map { it.toListViewTaskRatingDTO() }
+    fun listUserTaskReviews(@PathVariable("id") id: String): Flux<ListViewTaskRatingDTO> {
+        return client.getUserReviews(id).map {
+            it.toListViewTaskRatingDTO()
+        };
     }
 
     // TODO: this is postponed after the release of 1.0.0
     @PostMapping("/{id}/approve")
-    suspend fun approveUser(@PathVariable("id") id: String): Unit {
+    fun approveUser(@PathVariable("id") id: String): Unit {
 
     }
 }

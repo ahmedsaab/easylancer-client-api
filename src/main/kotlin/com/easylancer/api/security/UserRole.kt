@@ -1,6 +1,6 @@
 package com.easylancer.api.security
 
-enum class Role {
+enum class UserRole {
     USER,
     ADMIN
 }

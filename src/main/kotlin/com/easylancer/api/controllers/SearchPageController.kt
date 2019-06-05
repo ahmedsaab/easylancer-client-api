@@ -1,31 +1,30 @@
 package com.easylancer.api.controllers
 
-import com.easylancer.api.data.EventEmitter
-import com.easylancer.api.data.dto.TaskDTO
+import com.easylancer.api.data.DataApiClient
 import com.easylancer.api.dto.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
+import reactor.core.publisher.Flux
 
-
-@RequestMapping("/search")
 @RestController
+@CrossOrigin()
+@RequestMapping("/search")
 class SearchPageController(
-        @Autowired val eventEmitter: EventEmitter,
-        @Autowired private val bClient: com.easylancer.api.data.blocking.DataApiClient
+        @Autowired private val client: DataApiClient
 ) {
     @GetMapping("/all")
-    suspend fun viewAllTasks() : List<ListViewTaskDTO> {
-        val tasks: Array<TaskDTO> = bClient.getAllTasks();
-
-        return tasks.map { it.toListViewTaskDTO() }
+    fun viewAllTasks() : Flux<ListViewTaskDTO> {
+        return client.getAllTasks().map {
+            it.toListViewTaskDTO()
+        }
     }
 
     // TODO: implement filter on API
     @GetMapping("/open")
-    suspend fun viewOpenTasks() : List<ListViewTaskDTO> {
-        val tasks: Array<TaskDTO> = bClient.getAllTasks();
-
-        return tasks.map { it.toListViewTaskDTO() }
+    fun viewOpenTasks() : Flux<ListViewTaskDTO> {
+        return client.getAllTasks().map {
+            it.toListViewTaskDTO()
+        }
     }
 }

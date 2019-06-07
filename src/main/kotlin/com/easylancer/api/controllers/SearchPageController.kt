@@ -5,7 +5,7 @@ import com.easylancer.api.dto.*
 
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
-import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 @RestController
 @CrossOrigin()
@@ -14,17 +14,17 @@ class SearchPageController(
         @Autowired private val client: DataApiClient
 ) {
     @GetMapping("/all")
-    fun viewAllTasks() : Flux<ListViewTaskDTO> {
+    fun viewAllTasks() : Mono<List<ListViewTaskDTO>> {
         return client.getAllTasks().map {
             it.toListViewTaskDTO()
-        }
+        }.collectList()
     }
 
     // TODO: implement filter on API
     @GetMapping("/open")
-    fun viewOpenTasks() : Flux<ListViewTaskDTO> {
+    fun viewOpenTasks() : Mono<List<ListViewTaskDTO>> {
         return client.getAllTasks().map {
             it.toListViewTaskDTO()
-        }
+        }.collectList()
     }
 }

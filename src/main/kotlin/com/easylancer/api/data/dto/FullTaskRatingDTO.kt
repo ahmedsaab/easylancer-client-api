@@ -20,7 +20,7 @@ data class FullTaskRatingDTO(
                     dislikes = creatorUser.dislikes,
                     badges = creatorUser.badges,
                     isApproved = creatorUser.isApproved,
-                    id = creatorUser._id
+                    id = creatorUser._id.toHexString()
             ),
             criteria = criteria,
             description = description,

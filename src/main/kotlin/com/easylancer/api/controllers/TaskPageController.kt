@@ -4,8 +4,10 @@ import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.DataApiClient
 import com.easylancer.api.data.exceptions.DataApiBadRequestException
 import com.easylancer.api.data.exceptions.DataApiNotFoundException
+import com.easylancer.api.data.exceptions.DataConflictException
 import com.easylancer.api.dto.*
 import com.easylancer.api.exceptions.http.HttpBadRequestException
+import com.easylancer.api.exceptions.http.HttpConflictException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.easylancer.api.helpers.toJson
 import com.easylancer.api.security.UserPrincipal
@@ -16,8 +18,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.onErrorMap
+
+import org.bson.types.ObjectId
+import javax.validation.Valid
 
 @RestController
 @CrossOrigin()
@@ -34,20 +39,18 @@ class TaskPageController(
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
         val taskBody = taskDto.toJson()
-                .put("creatorUser", user.id)
+                .put("creatorUser", user.id.toHexString())
 
         return client.postTask(taskBody).map { task ->
             task.toListViewTaskDTO()
-        }.onErrorMap { e ->
-            if (e is DataApiBadRequestException)
-                HttpBadRequestException("Sorry can't do, please send a valid task data!", e, e.invalidParams)
-            else e
+        }.onErrorMap(DataApiBadRequestException::class) { e ->
+            HttpBadRequestException("Sorry can't do, please send a valid task data!", e, e.invalidParams)
         }
     }
 
     @GetMapping("/{id}/view")
     fun viewTask(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<DetailViewTaskDTO> {
         return client.getFullTask(id).doOnSuccess {
@@ -60,20 +63,16 @@ class TaskPageController(
             } else {
                 task.toViewerViewTaskDTO()
             }
-        }.onErrorMap { e ->
-            if(e is DataApiNotFoundException) {
-                HttpNotFoundException("No task found with this id", e)
-            } else {
-                e
-            }
+        }.onErrorMap(DataApiNotFoundException::class) { e ->
+            HttpNotFoundException("No task found with this id", e)
         }
     }
 
     @GetMapping("/{id}/offers")
     fun viewTaskOffers(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @AuthenticationPrincipal user: UserPrincipal
-    ) : Flux<ViewOfferDTO> {
+    ) : Mono<List<ViewOfferDTO>> {
         return client.getTask(id)
                 .zipWith(client.getTaskOffers(id).collectList())
                 .flatMapIterable { tuple ->
@@ -82,9 +81,9 @@ class TaskPageController(
                     tuple.t2.map { offer ->
                         offer.toViewOfferDTO()
                     }.filter { offer ->
-                        isOwner || offer.workerUser.id == user.id
+                        isOwner || offer.workerUser.id == user.id.toHexString()
                     }
-                }
+                }.collectList()
     }
 
     @PostMapping("/{id}/apply")
@@ -96,29 +95,37 @@ class TaskPageController(
         return client.postOffer(
                 offerDto.toJson()
                         .put("task", id)
-                        .put("workerUser", user.id)
+                        .put("workerUser", user.id.toHexString())
         ).map { offer ->
             offer.toIdDTO()
+        }.onErrorMap(DataConflictException::class) { e ->
+            HttpConflictException("Task is closed for offers or an offer was already made", e)
+        }.onErrorMap(DataApiBadRequestException::class) { e ->
+            HttpBadRequestException("Sorry can't do, please send a valid offer data!", e, e.invalidParams)
         }
     }
 
     @PutMapping("/{id}/edit")
     @PreAuthorize("hasAuthority('task:owner:' + #id)")
     fun updateTask(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @RequestBody taskDto: UpdateTaskDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
         return client.putTask(id, taskDto).map { task ->
             task.toListViewTaskDTO()
+        }.onErrorMap(DataApiBadRequestException::class) { e ->
+            HttpBadRequestException("Sorry can't do, please send a valid task data change!", e, e.invalidParams)
+        }.onErrorMap(DataConflictException::class) { e ->
+            HttpConflictException("Cannot update this task", e)
         }
     }
 
     @PostMapping("/{id}/accept")
     @PreAuthorize("hasAuthority('task:owner:' + #id)")
     fun acceptOfferToTask(
-            @PathVariable("id") id: String,
-            @RequestBody offerDto: AcceptOfferDTO,
+            @PathVariable("id") id: ObjectId,
+            @Valid @RequestBody offerDto: AcceptOfferDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
         val body = mapper.createObjectNode()
@@ -126,13 +133,15 @@ class TaskPageController(
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
+        }.onErrorMap(DataConflictException::class) { e ->
+            HttpConflictException("Task already assigned", e)
         }
     }
 
     @PostMapping("/{id}/start")
     @PreAuthorize("hasAuthority('task:worker:' + #id)")
     fun startTask(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
         val body = mapper.createObjectNode()
@@ -140,13 +149,15 @@ class TaskPageController(
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
+        }.onErrorMap(DataConflictException::class) { e ->
+            HttpConflictException("Task cannot be started", e)
         }
     }
 
     @PostMapping("/{id}/review/worker")
     @PreAuthorize("hasAuthority('task:worker:' + #id)")
     fun reviewTaskByWorker(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @RequestBody reviewDto: CreateTaskReviewDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ): Mono<ListViewTaskDTO> {
@@ -155,13 +166,17 @@ class TaskPageController(
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
+        }.onErrorMap(DataApiBadRequestException::class) { e ->
+            HttpBadRequestException("Sorry can't do, please send a valid review data!", e, e.invalidParams)
+        }.onErrorMap(DataConflictException::class) { e ->
+            HttpConflictException("Cannot add a review just yet!", e)
         }
     }
 
     @PostMapping("/{id}/review/owner")
     @PreAuthorize("hasAuthority('task:owner:' + #id)")
     fun reviewTaskByOwner(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @RequestBody reviewDto: CreateTaskReviewDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ): Mono<ListViewTaskDTO> {
@@ -170,6 +185,10 @@ class TaskPageController(
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
+        }.onErrorMap(DataApiBadRequestException::class) { e ->
+            HttpBadRequestException("Sorry can't do, please send a valid review data!", e, e.invalidParams)
+        }.onErrorMap(DataConflictException::class) { e ->
+            HttpConflictException("Cannot add a review just yet!", e)
         }
     }
 

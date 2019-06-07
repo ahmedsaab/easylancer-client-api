@@ -28,6 +28,8 @@ dependencies {
 
     compile "ch.qos.logback.contrib:logback-json-classic:0.1.5"
     compile "ch.qos.logback.contrib:logback-jackson:0.1.5"
+    compile group: 'org.mongodb', name: 'bson', version: '3.11.0-beta3'
+    compile group: 'org.springframework.data', name: 'spring-data-commons-core', version: '1.4.1.RELEASE'
 
 //    compile 'com.okta.spring:okta-spring-boot-starter:1.0.0'
     compile 'com.auth0:mvc-auth-commons:1.+'
@@ -46,6 +48,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mustache'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 //    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 //    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 

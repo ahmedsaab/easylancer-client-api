@@ -4,32 +4,33 @@ import com.easylancer.api.exceptions.runtime.TransformationException
 import com.easylancer.api.dto.ViewProfileDTO
 import com.easylancer.api.dto.ViewUserDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.bson.types.ObjectId
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UserDTO(
-    val about: String,
-    val createdTasks: Array<String>,
-    val acceptedTasks: Array<String>,
-    val appliedTasks: Array<String>,
-    val finishedTasks: Array<String>,
-    val lastName: String?,
-    val firstName: String?,
-    val imageUrl: String?,
-    val phoneNumber: String?,
-    val dislikes: Int,
-    val likes: Int,
-    val isApproved: Boolean,
-    val gender: String,
-    val ratings: UserRatingDTO,
-    val settings: UserSettingsDTO,
-    val _id: String,
-    val auth: String,
-    val lastSeen: Date,
-    val createdAt: Date,
-    val birthDate: Date?,
-    val city: String?,
-    val badges: Array<UserBadgeDTO>
+        val about: String,
+        val createdTasks: Array<String>,
+        val acceptedTasks: Array<String>,
+        val appliedTasks: Array<String>,
+        val finishedTasks: Array<String>,
+        val lastName: String?,
+        val firstName: String?,
+        val imageUrl: String?,
+        val phoneNumber: String?,
+        val dislikes: Int,
+        val likes: Int,
+        val isApproved: Boolean,
+        val gender: String,
+        val ratings: UserRatingDTO,
+        val settings: UserSettingsDTO,
+        val _id: ObjectId,
+        val auth: String,
+        val lastSeen: Date,
+        val createdAt: Date,
+        val birthDate: Date?,
+        val city: String?,
+        val badges: Array<UserBadgeDTO>
 ) {
     fun toViewProfileDTO() = ViewProfileDTO(
         about = about,
@@ -44,7 +45,7 @@ data class UserDTO(
         ratings = ratings,
         lastSeen = lastSeen,
         badges = badges,
-        id = _id,
+        id = _id.toHexString(),
         createdAt = createdAt
     )
     fun toViewUserDTO() = ViewUserDTO(
@@ -53,7 +54,7 @@ data class UserDTO(
         imageUrl = imageUrl ,
         gender = gender,
         city =  city,
-        id = _id,
+        id = _id.toHexString(),
         birthDate = birthDate,
         phoneNumber = phoneNumber,
         settings = settings

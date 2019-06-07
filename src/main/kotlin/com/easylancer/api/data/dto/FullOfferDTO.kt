@@ -4,6 +4,7 @@ import com.easylancer.api.dto.UserSummaryViewDTO
 import com.easylancer.api.dto.ViewOfferDTO
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.bson.types.ObjectId
 
 /**
  * Representation of a Task
@@ -14,23 +15,23 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FullOfferDTO(
-    val _id : String,
-    val paymentMethod: String,
-    @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
+        val _id : ObjectId,
+        val paymentMethod: String,
+        @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
     val timeToLive: Int,
-    val notifyCreator: Boolean,
-    val message: String,
-    @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
+        val notifyCreator: Boolean,
+        val message: String,
+        @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
     val price: Int,
-    val workerUser: UserSummaryDTO
+        val workerUser: UserSummaryDTO
 ) {
     fun toViewOfferDTO() = ViewOfferDTO(
-        id = _id,
+        id = _id.toHexString(),
         paymentMethod = paymentMethod,
         message = message,
         price = price,
         workerUser = UserSummaryViewDTO(
-                id = workerUser._id,
+                id = workerUser._id.toHexString(),
                 firstName = workerUser.firstName,
                 lastName = workerUser.lastName,
                 imageUrl = workerUser.imageUrl,

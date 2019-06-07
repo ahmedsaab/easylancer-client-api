@@ -36,7 +36,7 @@ class UserAuthToken(val user: UserDTO, private val jwt: Jwt): AbstractAuthentica
 
     // TODO: implement roles based on some flag in user dto info
     private fun getRoles(): List<UserRole> {
-        return if (principal.id == "ahmed.saab.dev@gmail.com") {
+        return if (principal.id.toHexString() == "ahmed.saab.dev@gmail.com") {
             listOf(UserRole.ADMIN, UserRole.USER)
         } else {
             listOf(UserRole.USER)

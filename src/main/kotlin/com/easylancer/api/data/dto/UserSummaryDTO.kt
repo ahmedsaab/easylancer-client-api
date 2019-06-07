@@ -3,6 +3,7 @@ package com.easylancer.api.data.dto
 import com.easylancer.api.dto.DetailViewTaskDTO
 import com.easylancer.api.dto.UserSummaryViewDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.bson.types.ObjectId
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UserSummaryDTO(
@@ -12,7 +13,7 @@ data class UserSummaryDTO(
         val dislikes: Int,
         val likes: Int,
         val isApproved: Boolean,
-        val _id: String,
+        val _id: ObjectId,
         val badges: Array<UserBadgeDTO>
 ) {
     fun toUserSummaryViewDTO() = UserSummaryViewDTO(
@@ -22,7 +23,7 @@ data class UserSummaryDTO(
             dislikes = dislikes,
             likes = likes,
             isApproved = isApproved,
-            id = _id,
+            id = _id.toHexString(),
             badges = badges
     )
 }

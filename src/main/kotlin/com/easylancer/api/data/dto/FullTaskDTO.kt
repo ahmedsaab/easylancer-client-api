@@ -2,29 +2,30 @@ package com.easylancer.api.data.dto
 
 import com.easylancer.api.dto.DetailViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.bson.types.ObjectId
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FullTaskDTO(
-    val category: String,
-    val type: String,
-    val paymentMethod: String,
-    val description: String,
-    val title: String,
-    val workerUser: UserSummaryDTO?,
-    val creatorUser: UserSummaryDTO,
-    val price: Int,
-    val seenBy: Array<String>,
-    val endDateTime: Date?,
-    val creatorRating: TaskRatingDTO?,
-    val workerRating: TaskRatingDTO?,
-    val status: String,
-    val acceptedOffer: String?,
-    val imagesUrls: Array<String>,
-    val _id: String,
-    val startDateTime: Date,
-    val location: TaskLocationDTO,
-    val createdAt: Date
+        val category: String,
+        val type: String,
+        val paymentMethod: String,
+        val description: String,
+        val title: String,
+        val workerUser: UserSummaryDTO?,
+        val creatorUser: UserSummaryDTO,
+        val price: Int,
+        val seenBy: Array<String>,
+        val endDateTime: Date?,
+        val creatorRating: TaskRatingDTO?,
+        val workerRating: TaskRatingDTO?,
+        val status: String,
+        val acceptedOffer: ObjectId?,
+        val imagesUrls: Array<String>,
+        val _id: ObjectId,
+        val startDateTime: Date,
+        val location: TaskLocationDTO,
+        val createdAt: Date
 ) {
     fun toOwnerViewTaskDTO() = DetailViewTaskDTO(
         category = category,
@@ -40,9 +41,9 @@ data class FullTaskDTO(
         creatorRating = creatorRating,
         workerRating = workerRating,
         status = status,
-        acceptedOffer = acceptedOffer,
+        acceptedOffer = acceptedOffer?.toHexString(),
         imagesUrls = imagesUrls,
-        id = _id,
+        id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
         createdAt = createdAt
@@ -62,9 +63,9 @@ data class FullTaskDTO(
         creatorRating = creatorRating,
         workerRating = workerRating,
         status = status,
-        acceptedOffer = acceptedOffer,
+        acceptedOffer = acceptedOffer?.toHexString(),
         imagesUrls = imagesUrls,
-        id = _id,
+        id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
         createdAt = createdAt
@@ -84,9 +85,9 @@ data class FullTaskDTO(
         creatorRating = creatorRating,
         workerRating = workerRating,
         status = status,
-        acceptedOffer = acceptedOffer,
+        acceptedOffer = acceptedOffer?.toHexString(),
         imagesUrls = imagesUrls,
-        id = _id,
+        id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
         createdAt = createdAt

@@ -2,13 +2,15 @@ package com.easylancer.api.data
 
 import com.easylancer.api.data.dto.*
 import com.easylancer.api.data.http.DataRequest
-import com.easylancer.api.data.http.DataResponseError
+import com.easylancer.api.data.http.DataErrorResponse
 import com.easylancer.api.data.exceptions.*
+import com.easylancer.api.data.http.DataUnexpectedErrorResponse
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.bson.types.ObjectId
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpMethod
 import org.springframework.web.reactive.function.BodyInserters
@@ -30,33 +32,35 @@ class DataApiClient(
             DataApiResponseException(
                     "Received ${resp.rawStatusCode()} response",
                     request = req,
-                    response = DataResponseError(resp.rawStatusCode(), body)
+                    response = DataErrorResponse(resp.rawStatusCode(), body)
             )
         }.onErrorMap { e ->
             DataApiUnexpectedResponseException(
                     "Failed to parse error response body",
                     request = req,
-                    response = DataResponseError(resp.rawStatusCode(), null),
+                    response = DataUnexpectedErrorResponse(resp.rawStatusCode(), null),
                     cause = e
             )
         }
     }
 
-    private fun transformException(req: DataRequest, e: Throwable): DataApiException {
+    private fun handleException(req: DataRequest, e: Throwable): DataApiException {
         when (e) {
             is DataApiException ->
                 return if (e is DataApiResponseException) {
                     when (e.response.statusCode) {
                         404 -> DataApiNotFoundException("No entity found with this id", e)
                         400 -> DataApiBadRequestException("Invalid or missing params", e)
+                        405 -> DataApiUnprocessableEntityException("Semantically or logically invalid params combination", e)
+                        409 -> DataConflictException("Requested state is not allowed given current state", e)
                         else -> e
                     }
                 } else e
             is JsonProcessingException ->
                 return DataApiUnexpectedResponseException(
-                        message = "Failed to parse success response body (unexpected response)",
+                        message = "Failed to parse success response body",
                         request = req,
-                        response = DataResponseError(200, null),
+                        response = DataUnexpectedErrorResponse(200, null),
                         cause = e
                 )
             is ConnectException ->
@@ -89,7 +93,7 @@ class DataApiClient(
                 .bodyToMono(JsonNode::class.java)
                 .map { body -> mapper.treeToValue(body, DataResponseSuccessDTO::class.java) }
                 .map { dto -> mapper.treeToValue(dto.data, T::class.java) }
-                .onErrorMap { e -> transformException(request, e) }
+                .onErrorMap { e -> handleException(request, e) }
     }
 
     private inline fun <reified T> findOneEntity(url: String): Mono<T> {
@@ -107,7 +111,7 @@ class DataApiClient(
                 .map { body -> mapper.treeToValue(body, DataResponseSuccessDTO::class.java) }
                 .map { dto -> mapper.readValue<ArrayList<T>>(dto.data.toString(), listType) }
                 .map { array -> array[0] }
-                .onErrorMap { e -> transformException(request, e) }
+                .onErrorMap { e -> handleException(request, e) }
     }
 
     private inline fun <reified T> getEntities(url: String): Flux<T> {
@@ -125,7 +129,7 @@ class DataApiClient(
                 .flatMapIterable { dto ->
                     mapper.readValue<ArrayList<T>>(dto.data.toString(), listType)
                 }.onErrorMap { e ->
-                    transformException(request, e)
+                    handleException(request, e)
                 }
     }
 
@@ -141,10 +145,13 @@ class DataApiClient(
                         { httpStatus -> !httpStatus.is2xxSuccessful },
                         { response -> transformErrorResponse(request, response) }
                 )
-                .bodyToMono(JsonNode::class.java)
-                .map { body -> mapper.treeToValue(body, DataResponseSuccessDTO::class.java) }
-                .map { dto -> mapper.treeToValue(dto.data, T::class.java) }
-                .onErrorMap { e -> transformException(request, e) }
+                .bodyToMono(DataResponseSuccessDTO::class.java)
+                .map { dto ->
+                    mapper.treeToValue(dto.data, T::class.java)
+                }
+                .onErrorMap { e ->
+                    handleException(request, e)
+                }
     }
 
     private inline fun <reified T> postEntities(url: String, entity: Any? = null): Flux<T> {
@@ -160,10 +167,12 @@ class DataApiClient(
                         { httpStatus -> !httpStatus.is2xxSuccessful },
                         { response -> transformErrorResponse(request, response) }
                 )
-                .bodyToMono(JsonNode::class.java)
-                .map { body -> mapper.treeToValue(body, DataResponseSuccessDTO::class.java) }
-                .flatMapIterable { dto -> mapper.readValue<ArrayList<T>>(dto.data.toString(), listType) }
-                .onErrorMap { e -> transformException(request, e) }
+                .bodyToMono(DataResponseSuccessDTO::class.java)
+                .flatMapIterable { dto ->
+                    mapper.readValue<ArrayList<T>>(dto.data.toString(), listType)
+                }.onErrorMap { e ->
+                    handleException(request, e)
+                }
     }
 
     private inline fun <reified T> putEntity(url: String, entity: Any): Mono<T> {
@@ -181,10 +190,10 @@ class DataApiClient(
                 .bodyToMono(JsonNode::class.java)
                 .map { body -> mapper.treeToValue(body, DataResponseSuccessDTO::class.java) }
                 .map { dto -> mapper.treeToValue(dto.data, T::class.java) }
-                .onErrorMap { e -> transformException(request, e) }
+                .onErrorMap { e -> handleException(request, e) }
     }
 
-    fun getUser(id: String): Mono<UserDTO> {
+    fun getUser(id: ObjectId): Mono<UserDTO> {
         return getEntity("/users/$id")
     }
 
@@ -192,11 +201,11 @@ class DataApiClient(
         return findOneEntity("/users?auth=$auth")
     }
 
-    fun getTask(id: String): Mono<TaskDTO> {
+    fun getTask(id: ObjectId): Mono<TaskDTO> {
         return getEntity("/tasks/$id")
     }
 
-    fun getFullTask(id: String): Mono<FullTaskDTO> {
+    fun getFullTask(id: ObjectId): Mono<FullTaskDTO> {
         return getEntity("/tasks/$id/view")
     }
 
@@ -204,23 +213,23 @@ class DataApiClient(
         return getEntities("/tasks")
     }
 
-    fun getUserFinishedTasks(id: String): Flux<TaskDTO> {
+    fun getUserFinishedTasks(id: ObjectId): Flux<TaskDTO> {
         return getEntities("/users/$id/tasks/finished")
     }
 
-    fun getUserCreatedTasks(id: String): Flux<TaskDTO> {
+    fun getUserCreatedTasks(id: ObjectId): Flux<TaskDTO> {
         return getEntities("/users/$id/tasks/created")
     }
 
-    fun getUserRelatedTasks(id: String): Flux<TaskDTO> {
+    fun getUserRelatedTasks(id: ObjectId): Flux<TaskDTO> {
         return getEntities("/users/$id/tasks")
     }
 
-    fun getUserReviews(id: String): Flux<FullTaskRatingDTO> {
+    fun getUserReviews(id: ObjectId): Flux<FullTaskRatingDTO> {
         return getEntities("/users/$id/reviews")
     }
 
-    fun getTaskOffers(id: String): Flux<FullOfferDTO> {
+    fun getTaskOffers(id: ObjectId): Flux<FullOfferDTO> {
         return getEntities("/offers/view?task=$id")
     }
 
@@ -236,16 +245,15 @@ class DataApiClient(
         return postEntity("/offers", offer)
     }
 
-    fun taskSeenBy(id: String, userId: String): Flux<String> {
+    fun taskSeenBy(id: ObjectId, userId: ObjectId): Flux<String> {
         return postEntities("/tasks/$id/seenBy/$userId")
     }
 
-    fun putTask(taskId: String, task: Any): Mono<TaskDTO> {
+    fun putTask(taskId: ObjectId, task: Any): Mono<TaskDTO> {
         return putEntity("/tasks/$taskId", task)
     }
 
-    fun putUser(userId: String, user: Any): Mono<UserDTO> {
+    fun putUser(userId: ObjectId, user: Any): Mono<UserDTO> {
         return putEntity("/users/$userId", user)
     }
-
 }

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*
 import reactor.core.publisher.Mono
 
 @RestController
-@CrossOrigin()
 @RequestMapping("/search")
 class SearchPageController(
         @Autowired private val client: DataApiClient

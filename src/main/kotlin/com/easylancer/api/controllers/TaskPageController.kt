@@ -25,7 +25,6 @@ import org.bson.types.ObjectId
 import javax.validation.Valid
 
 @RestController
-@CrossOrigin()
 @RequestMapping("/tasks")
 class TaskPageController(
         @Autowired val eventEmitter: EventEmitter,

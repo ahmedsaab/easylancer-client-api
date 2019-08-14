@@ -85,7 +85,7 @@ data class FullTaskDTO(
         creatorRating = creatorRating,
         workerRating = workerRating,
         status = status,
-        acceptedOffer = acceptedOffer?.toHexString(),
+        acceptedOffer = null,
         imagesUrls = imagesUrls,
         id = _id.toHexString(),
         startDateTime = startDateTime,

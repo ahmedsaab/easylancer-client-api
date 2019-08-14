@@ -17,6 +17,8 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.reactive.CorsConfigurationSource
 
 @EnableReactiveMethodSecurity
 @EnableWebFluxSecurity
@@ -29,8 +31,13 @@ class SecurityConfig(
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
         http
+            .cors()
+                .configurationSource {
+                    CorsConfiguration().applyPermitDefaultValues()
+                }
+                .and()
             .csrf()
-            .disable()
+                .disable()
             .addFilterAt(LoggingWebFilter(), SecurityWebFiltersOrder.FIRST)
             .authorizeExchange()
                 .matchers(PathRequest.toStaticResources().atCommonLocations())
@@ -50,7 +57,7 @@ class SecurityConfig(
                 .pathMatchers("/profiles/**")
                     .hasRole(UserRole.USER.name)
                 .pathMatchers("/tasks/**")
-                    .permitAll()
+                    .hasRole(UserRole.USER.name)
                 .pathMatchers("/users/**")
                     .hasRole(UserRole.USER.name)
                 .pathMatchers("/admin/**")

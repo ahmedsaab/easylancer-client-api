@@ -32,6 +32,7 @@ class WebExceptionHandler(
 
         exchange.response.headers.contentType = MediaType.APPLICATION_JSON
         exchange.response.statusCode = HttpStatus.resolve(errorResponseDto.status)
+        exchange.response.headers.accessControlAllowOrigin="*"
         exchange.attributes["exception"] = ex
 
         return decorateWithBodyLoaders(exchange).response.writeWith(Mono.just(dataBuffer))

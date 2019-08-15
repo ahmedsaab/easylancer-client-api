@@ -8,5 +8,5 @@ import java.util.*
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaskLocationDTO(
         val lat: Float,
-        val lon: Float
+        val lng: Float
 )

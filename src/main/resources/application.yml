@@ -29,3 +29,7 @@ data:
   api:
     server: http://localhost
     port: 3003
+
+files:
+  api:
+    url: https://2d5res4ff2.execute-api.eu-central-1.amazonaws.com/dev

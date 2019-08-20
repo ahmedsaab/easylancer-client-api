@@ -9,6 +9,8 @@ import com.easylancer.api.dto.*
 import com.easylancer.api.exceptions.http.HttpBadRequestException
 import com.easylancer.api.exceptions.http.HttpConflictException
 import com.easylancer.api.exceptions.http.HttpNotFoundException
+import com.easylancer.api.files.FilesApiBadRequestException
+import com.easylancer.api.files.FilesApiClient
 import com.easylancer.api.helpers.toJson
 import com.easylancer.api.security.UserPrincipal
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -28,7 +30,8 @@ import javax.validation.Valid
 @RequestMapping("/tasks")
 class TaskPageController(
         @Autowired val eventEmitter: EventEmitter,
-        @Autowired private val client: DataApiClient
+        @Autowired private val client: DataApiClient,
+        @Autowired private val files: FilesApiClient
 ) {
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
@@ -40,11 +43,20 @@ class TaskPageController(
         val taskBody = taskDto.toJson()
                 .put("creatorUser", user.id.toHexString())
 
-        return client.postTask(taskBody).map { task ->
-            task.toListViewTaskDTO()
-        }.onErrorMap(DataApiBadRequestException::class) { e ->
-            HttpBadRequestException("Sorry can't do, please send a valid task data!", e, e.invalidParams)
-        }
+        return (
+            files.check(taskDto.imagesUrls)
+                .then(client.postTask(taskBody))
+                .doOnSuccess {
+                    eventEmitter.filesUsed(taskDto.imagesUrls)
+                }
+                .map { task ->
+                    task.toListViewTaskDTO()
+                }.onErrorMap(DataApiBadRequestException::class) { e ->
+                    HttpBadRequestException("Invalid task data", e, e.invalidParams)
+                }.onErrorMap(FilesApiBadRequestException::class) { e ->
+                    HttpBadRequestException("Invalid files data", e)
+                }
+        )
     }
 
     @GetMapping("/{id}/view")

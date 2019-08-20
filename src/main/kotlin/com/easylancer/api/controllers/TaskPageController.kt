@@ -87,7 +87,7 @@ class TaskPageController(
         return client.getTask(id)
                 .zipWith(client.getTaskOffers(id).collectList())
                 .flatMapIterable { tuple ->
-                    val isOwner = tuple.t1.creatorUser == user.id
+                    val isOwner = tuple.t1.creatorUser._id == user.id
 
                     tuple.t2.map { offer ->
                         offer.toViewOfferDTO()

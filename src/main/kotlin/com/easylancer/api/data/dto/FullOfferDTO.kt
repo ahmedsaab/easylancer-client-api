@@ -18,11 +18,11 @@ data class FullOfferDTO(
         val _id : ObjectId,
         val paymentMethod: String,
         @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
-    val timeToLive: Int,
+        val timeToLive: Int,
         val notifyCreator: Boolean,
         val message: String,
         @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
-    val price: Int,
+        val price: Int,
         val workerUser: UserSummaryDTO
 ) {
     fun toViewOfferDTO() = ViewOfferDTO(

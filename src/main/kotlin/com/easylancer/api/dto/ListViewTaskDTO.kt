@@ -16,5 +16,7 @@ data class ListViewTaskDTO(
     val id: String,
     val startDateTime: Date,
     val location: TaskLocationDTO,
-    val createdAt: Date
+    val createdAt: Date,
+    val imagesUrls: Array<String>,
+    val creatorUser: UserSummaryViewDTO
 )

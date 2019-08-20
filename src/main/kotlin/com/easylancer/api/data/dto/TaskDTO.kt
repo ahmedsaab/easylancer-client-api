@@ -14,7 +14,7 @@ data class TaskDTO(
         val description: String,
         val title: String,
         val workerUser: ObjectId?,
-        val creatorUser: ObjectId?,
+        val creatorUser: UserSummaryDTO,
         val price: Int,
         val seenBy: Array<String>,
         val endDateTime: Date?,
@@ -42,6 +42,8 @@ data class TaskDTO(
         id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
-        createdAt = createdAt
+        createdAt = createdAt,
+        creatorUser = creatorUser.toUserSummaryViewDTO(),
+        imagesUrls = imagesUrls
     )
 }

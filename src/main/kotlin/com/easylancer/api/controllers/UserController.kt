@@ -50,7 +50,7 @@ class UserController(
                     } else {
                         container.assigned += dto
                     }
-                } else if (task.creatorUser == user.id) {
+                } else if (task.creatorUser._id == user.id) {
                     container.created += dto
                 } else {
                     container.applied += dto

@@ -154,7 +154,7 @@ class DataApiClient(
                 }
     }
 
-    private inline fun <reified T> postEntities(url: String, entity: Any? = null): Flux<T> {
+    private inline fun <reified T> postEntities(url: String, entity: Any? = mapper.createObjectNode()): Flux<T> {
         val reqBody = mapper.valueToTree<JsonNode>(entity)
         val request = DataRequest(url, HttpMethod.POST, reqBody);
         val listType = mapper.typeFactory.constructCollectionType(ArrayList::class.java, T::class.java)

@@ -1,20 +1,19 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.dto.IdViewDTO
-import com.easylancer.api.dto.ListViewTaskDTO
+import com.easylancer.api.dto.SearchViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TaskDTO(
+data class SearchTaskDTO(
         val category: String,
         val type: String,
         val paymentMethod: String,
         val description: String,
         val title: String,
         val workerUser: ObjectId?,
-        val creatorUser: ObjectId,
+        val creatorUser: UserSummaryDTO,
         val price: Int,
         val seenBy: Array<String>,
         val endDateTime: Date?,
@@ -28,10 +27,7 @@ data class TaskDTO(
         val location: TaskLocationDTO,
         val createdAt: Date
 ) {
-    fun toIdDTO() = IdViewDTO(
-        id = _id.toHexString()
-    )
-    fun toListViewTaskDTO() = ListViewTaskDTO(
+    fun toSearchViewTaskDTO() = SearchViewTaskDTO(
         category = category,
         type = type,
         paymentMethod = paymentMethod,
@@ -42,6 +38,8 @@ data class TaskDTO(
         id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
-        createdAt = createdAt
+        createdAt = createdAt,
+        creatorUser = creatorUser.toUserSummaryViewDTO(),
+        imagesUrls = imagesUrls
     )
 }

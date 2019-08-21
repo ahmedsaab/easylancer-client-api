@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.*
 
 @JsonPropertyOrder(alphabetic=true)
-data class ListViewTaskDTO(
+data class SearchViewTaskDTO(
     val category: String,
     val type: String,
     val paymentMethod: String,
@@ -16,5 +16,7 @@ data class ListViewTaskDTO(
     val id: String,
     val startDateTime: Date,
     val location: TaskLocationDTO,
-    val createdAt: Date
+    val createdAt: Date,
+    val imagesUrls: Array<String>,
+    val creatorUser: UserSummaryViewDTO
 )

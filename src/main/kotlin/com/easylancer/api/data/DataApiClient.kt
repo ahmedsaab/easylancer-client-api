@@ -209,8 +209,8 @@ class DataApiClient(
         return getEntity("/tasks/$id/view")
     }
 
-    fun getAllTasks(): Flux<TaskDTO> {
-        return getEntities("/tasks")
+    fun getAllTasks(): Flux<SearchTaskDTO> {
+        return getEntities("/tasks/search")
     }
 
     fun getUserFinishedTasks(id: ObjectId): Flux<TaskDTO> {

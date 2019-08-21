@@ -13,17 +13,17 @@ class SearchPageController(
         @Autowired private val client: DataApiClient
 ) {
     @GetMapping("/all")
-    fun viewAllTasks() : Mono<List<ListViewTaskDTO>> {
+    fun viewAllTasks() : Mono<List<SearchViewTaskDTO>> {
         return client.getAllTasks().map {
-            it.toListViewTaskDTO()
+            it.toSearchViewTaskDTO()
         }.collectList()
     }
 
     // TODO: implement filter on API
     @GetMapping("/open")
-    fun viewOpenTasks() : Mono<List<ListViewTaskDTO>> {
+    fun viewOpenTasks() : Mono<List<SearchViewTaskDTO>> {
         return client.getAllTasks().map {
-            it.toListViewTaskDTO()
+            it.toSearchViewTaskDTO()
         }.collectList()
     }
 }

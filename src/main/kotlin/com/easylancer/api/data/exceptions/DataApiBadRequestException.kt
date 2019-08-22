@@ -15,7 +15,7 @@ class DataApiBadRequestException(
         cause: Exception? = null
 ): DataApiException(message, request, response, cause) {
     val invalidParams: JsonNode =
-            if (response.statusCode != 400 || response.body !is DataResponseErrorDTO)
+            if (response.statusCode != 400)
                 jacksonObjectMapper().createObjectNode()
             else
                 cleanInvalidParamsArray(response.body.message)

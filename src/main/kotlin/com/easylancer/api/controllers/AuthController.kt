@@ -1,7 +1,6 @@
 package com.easylancer.api.controllers
 
 import com.easylancer.api.data.EventEmitter
-import com.easylancer.api.data.dto.*
 import com.easylancer.api.data.DataApiClient
 import com.easylancer.api.dto.*
 import com.easylancer.api.security.UserPrincipal
@@ -10,9 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.*
 import org.springframework.security.crypto.password.PasswordEncoder
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.reactive.awaitFirst
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import reactor.core.publisher.Mono
 
@@ -31,13 +28,8 @@ class AuthController(
     }
 
     @PostMapping("/sign-up")
-    suspend fun signupUser(@RequestBody userDto: CreateUserDTO) : ViewUserDTO {
-        val userBody = mapper.valueToTree<ObjectNode>(userDto)
-        userBody.put("password", passwordEncoder.encode(userDto.password))
+    suspend fun signupUser(@RequestBody userDto: CreateUserDTO) : Unit {
 
-        val user: UserDTO = client.postUser(userBody).awaitFirst()
-
-        return user.toViewUserDTO();
     }
 
     @GetMapping("/me")

@@ -46,7 +46,7 @@ class FilesApiClient(
         val urlsArray = mapper.createArrayNode();
         urls.forEach { urlsArray.add(it) }
         val json = mapper.createObjectNode();
-        json.put("urls", urlsArray)
+        json.set("urls", urlsArray)
 
         return post("/update-files", json)
     }
@@ -55,7 +55,7 @@ class FilesApiClient(
         val urlsArray = mapper.createArrayNode();
         urls.forEach { urlsArray.add(it) }
         val json = mapper.createObjectNode();
-        json.put("urls", urlsArray)
+        json.set("urls", urlsArray)
         json.put("confirm", true)
 
         return post("/update-files", json)

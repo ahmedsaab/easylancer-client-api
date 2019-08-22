@@ -30,7 +30,8 @@ data class UserDTO(
         val createdAt: Date,
         val birthDate: Date?,
         val city: String?,
-        val badges: Array<UserBadgeDTO>
+        val badges: Array<UserBadgeDTO>,
+        val tags: Array<UserTagDTO>
 ) {
     fun toViewProfileDTO() = ViewProfileDTO(
         about = about,
@@ -46,7 +47,8 @@ data class UserDTO(
         lastSeen = lastSeen,
         badges = badges,
         id = _id.toHexString(),
-        createdAt = createdAt
+        createdAt = createdAt,
+        tags = tags
     )
     fun toViewUserDTO() = ViewUserDTO(
         lastName = lastName,

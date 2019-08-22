@@ -23,6 +23,7 @@ data class DetailViewTaskDTO(
     val status: String,
     val acceptedOffer: String?,
     val imagesUrls: Array<String>,
+    val tags: Array<String>,
     val id: String,
     val startDateTime: Date,
     val location: TaskLocationDTO,

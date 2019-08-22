@@ -25,7 +25,8 @@ data class FullTaskDTO(
         val _id: ObjectId,
         val startDateTime: Date,
         val location: TaskLocationDTO,
-        val createdAt: Date
+        val createdAt: Date,
+        val tags: Array<String>
 ) {
     fun toOwnerViewTaskDTO() = DetailViewTaskDTO(
         category = category,
@@ -46,7 +47,8 @@ data class FullTaskDTO(
         id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
-        createdAt = createdAt
+        createdAt = createdAt,
+        tags = tags
     )
 
     fun toWorkerViewTaskDTO() = DetailViewTaskDTO(
@@ -68,7 +70,8 @@ data class FullTaskDTO(
         id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
-        createdAt = createdAt
+        createdAt = createdAt,
+        tags = tags
     )
 
     fun toViewerViewTaskDTO() = DetailViewTaskDTO(
@@ -90,6 +93,7 @@ data class FullTaskDTO(
         id = _id.toHexString(),
         startDateTime = startDateTime,
         location = location,
-        createdAt = createdAt
+        createdAt = createdAt,
+        tags = tags
     )
 }

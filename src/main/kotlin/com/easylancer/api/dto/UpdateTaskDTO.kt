@@ -17,5 +17,6 @@ data class UpdateTaskDTO(
     val imagesUrls: Array<String>?,
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone="UTC")
     val startDateTime: Date?,
-    val location: TaskLocationDTO?
+    val location: TaskLocationDTO?,
+    val tags: Array<String>?
 )

@@ -26,7 +26,8 @@ data class TaskDTO(
         val _id: ObjectId,
         val startDateTime: Date,
         val location: TaskLocationDTO,
-        val createdAt: Date
+        val createdAt: Date,
+        val tags: Array<String>
 ) {
     fun toIdDTO() = IdViewDTO(
         id = _id.toHexString()

@@ -13,7 +13,7 @@ data class SearchTaskDTO(
         val description: String,
         val title: String,
         val workerUser: ObjectId?,
-        val creatorUser: UserSummaryDTO,
+        val creatorUser: GeneralUserSummaryDTO,
         val price: Int,
         val seenBy: Array<String>,
         val endDateTime: Date?,
@@ -39,7 +39,7 @@ data class SearchTaskDTO(
         startDateTime = startDateTime,
         location = location,
         createdAt = createdAt,
-        creatorUser = creatorUser.toUserSummaryViewDTO(),
+        creatorUser = creatorUser.toGeneralUserSummaryViewDTO(),
         imagesUrls = imagesUrls
     )
 }

@@ -1,12 +1,12 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.dto.DetailViewTaskDTO
-import com.easylancer.api.dto.UserSummaryViewDTO
+import com.easylancer.api.dto.GeneralUserSummaryViewDTO
+import com.easylancer.api.dto.WorkerUserSummaryViewDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class UserSummaryDTO(
+data class GeneralUserSummaryDTO(
         val firstName: String?,
         val lastName: String?,
         val imageUrl: String?,
@@ -16,7 +16,7 @@ data class UserSummaryDTO(
         val _id: ObjectId,
         val badges: Array<UserBadgeDTO>
 ) {
-    fun toUserSummaryViewDTO() = UserSummaryViewDTO(
+    fun toGeneralUserSummaryViewDTO() = GeneralUserSummaryViewDTO(
             firstName = firstName,
             lastName = lastName,
             imageUrl = imageUrl,

@@ -18,5 +18,5 @@ data class SearchViewTaskDTO(
     val location: TaskLocationDTO,
     val createdAt: Date,
     val imagesUrls: Array<String>,
-    val creatorUser: UserSummaryViewDTO
+    val creatorUser: GeneralUserSummaryViewDTO
 )

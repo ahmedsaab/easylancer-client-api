@@ -1,6 +1,5 @@
 package com.easylancer.api.data.dto
 
-import com.easylancer.api.dto.UserSummaryViewDTO
 import com.easylancer.api.dto.ViewOfferDTO
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -23,22 +22,13 @@ data class FullOfferDTO(
         val message: String,
         @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
         val price: Int,
-        val workerUser: UserSummaryDTO
+        val workerUser: WorkerUserSummaryDTO
 ) {
     fun toViewOfferDTO() = ViewOfferDTO(
         id = _id.toHexString(),
         paymentMethod = paymentMethod,
         message = message,
         price = price,
-        workerUser = UserSummaryViewDTO(
-                id = workerUser._id.toHexString(),
-                firstName = workerUser.firstName,
-                lastName = workerUser.lastName,
-                imageUrl = workerUser.imageUrl,
-                likes = workerUser.likes,
-                dislikes = workerUser.dislikes,
-                isApproved = workerUser.isApproved,
-                badges = workerUser.badges
-        )
+        workerUser = workerUser.toWorkerUserSummaryViewDTO()
     )
 }

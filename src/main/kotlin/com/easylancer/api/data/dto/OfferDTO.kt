@@ -10,11 +10,11 @@ data class OfferDTO(
         val _id : ObjectId,
         val paymentMethod: String,
         @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
-    val timeToLive: Int,
+        val timeToLive: Int,
         val notifyCreator: Boolean,
         val message: String,
         @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
-    val price: Int
+        val price: Int
 ) {
     fun toIdDTO() = IdViewDTO(
         id = _id.toHexString()

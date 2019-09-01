@@ -3,7 +3,7 @@ package com.easylancer.api.data.exceptions
 import com.easylancer.api.data.http.DataRequest
 import com.easylancer.api.data.http.DataErrorResponse
 
-class DataConflictException(
+class DataApiConflictException(
         message: String,
         request: DataRequest,
         override val response: DataErrorResponse,

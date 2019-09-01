@@ -13,6 +13,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.bson.types.ObjectId
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpMethod
+import org.springframework.util.CollectionUtils
+import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
@@ -52,7 +54,7 @@ class DataApiClient(
                         404 -> DataApiNotFoundException("No entity found with this id", e)
                         400 -> DataApiBadRequestException("Invalid or missing params", e)
                         405 -> DataApiUnprocessableEntityException("Semantically or logically invalid params combination", e)
-                        409 -> DataConflictException("Requested state is not allowed given current state", e)
+                        409 -> DataApiConflictException("Requested state is not allowed given current state", e)
                         else -> e
                     }
                 } else e
@@ -114,23 +116,27 @@ class DataApiClient(
                 .onErrorMap { e -> handleException(request, e) }
     }
 
-    private inline fun <reified T> getEntities(url: String): Flux<T> {
+    private inline fun <reified T> getEntities(url: String, filter: Map<String, List<String>> = HashMap<String, List<String>>()): Flux<T> {
         val request = DataRequest(url, HttpMethod.GET);
         val listType = mapper.typeFactory.constructCollectionType(ArrayList::class.java, T::class.java)
 
         return webClient.get()
-                .uri(request.url)
-                .retrieve()
-                .onStatus(
-                        { httpStatus -> !httpStatus.is2xxSuccessful },
-                        { response -> transformErrorResponse(request, response) }
-                )
-                .bodyToMono(DataResponseSuccessDTO::class.java)
-                .flatMapIterable { dto ->
-                    mapper.readValue<ArrayList<T>>(dto.data.toString(), listType)
-                }.onErrorMap { e ->
-                    handleException(request, e)
-                }
+            .uri {
+                it.path(request.url)
+                        .queryParams(CollectionUtils.toMultiValueMap(filter))
+                        .build()
+            }
+            .retrieve()
+            .onStatus(
+                { httpStatus -> !httpStatus.is2xxSuccessful },
+                { response -> transformErrorResponse(request, response) }
+            )
+            .bodyToMono(DataResponseSuccessDTO::class.java)
+            .flatMapIterable { dto ->
+                mapper.readValue<ArrayList<T>>(dto.data.toString(), listType)
+            }.onErrorMap { e ->
+                handleException(request, e)
+            }
     }
 
     private inline fun <reified T> postEntity(url: String, entity: Any): Mono<T> {
@@ -140,6 +146,25 @@ class DataApiClient(
         return webClient.post()
                 .uri(request.url)
                 .body(BodyInserters.fromObject(reqBody))
+                .retrieve()
+                .onStatus(
+                        { httpStatus -> !httpStatus.is2xxSuccessful },
+                        { response -> transformErrorResponse(request, response) }
+                )
+                .bodyToMono(DataResponseSuccessDTO::class.java)
+                .map { dto ->
+                    mapper.treeToValue(dto.data, T::class.java)
+                }
+                .onErrorMap { e ->
+                    handleException(request, e)
+                }
+    }
+
+    private inline fun <reified T> deleteEntity(url: String): Mono<T> {
+        val request = DataRequest(url, HttpMethod.DELETE);
+
+        return webClient.delete()
+                .uri(request.url)
                 .retrieve()
                 .onStatus(
                         { httpStatus -> !httpStatus.is2xxSuccessful },
@@ -230,7 +255,11 @@ class DataApiClient(
     }
 
     fun getTaskOffers(id: ObjectId): Flux<FullOfferDTO> {
-        return getEntities("/offers/view?task=$id")
+        val query = HashMap<String, List<String>>()
+
+        query["task"] = listOf(id.toHexString())
+
+        return getEntities("/offers/view", query)
     }
 
     fun postTask(task: ObjectNode): Mono<TaskDTO> {
@@ -255,5 +284,13 @@ class DataApiClient(
 
     fun putUser(userId: ObjectId, user: Any): Mono<UserDTO> {
         return putEntity("/users/$userId", user)
+    }
+
+    fun findOneOffer(offer: Map<String, List<String>>): Mono<OfferDTO> {
+        return getEntities<OfferDTO>("/offers", offer).next()
+    }
+
+    fun deleteOffer(id: ObjectId): Mono<OfferDTO> {
+        return deleteEntity("/offers/$id")
     }
 }

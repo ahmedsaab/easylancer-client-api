@@ -4,7 +4,7 @@ import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.DataApiClient
 import com.easylancer.api.data.exceptions.DataApiBadRequestException
 import com.easylancer.api.data.exceptions.DataApiNotFoundException
-import com.easylancer.api.data.exceptions.DataConflictException
+import com.easylancer.api.data.exceptions.DataApiConflictException
 import com.easylancer.api.dto.*
 import com.easylancer.api.exceptions.http.HttpBadRequestException
 import com.easylancer.api.exceptions.http.HttpConflictException
@@ -109,10 +109,32 @@ class TaskPageController(
                         .put("workerUser", user.id.toHexString())
         ).map { offer ->
             offer.toIdDTO()
-        }.onErrorMap(DataConflictException::class) { e ->
+        }.onErrorMap(DataApiConflictException::class) { e ->
             HttpConflictException("Task is closed for offers or an offer was already made", e)
         }.onErrorMap(DataApiBadRequestException::class) { e ->
             HttpBadRequestException("Sorry can't do, please send a valid offer data!", e, e.invalidParams)
+        }
+    }
+
+    @PostMapping("/{id}/withdraw")
+    @PreAuthorize("hasAuthority('task:applied:' + #id)")
+    fun withdrawTaskOffer(
+            @PathVariable("id") id: String,
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<IdViewDTO> {
+        val query = HashMap<String, List<String>>()
+
+        query["task"] = listOf(id)
+        query["workerUser"] = listOf(user.id.toHexString())
+
+        return client.findOneOffer(query).flatMap { offer ->
+            client.deleteOffer(offer._id)
+        }.map { offer ->
+            offer.toIdDTO()
+        }.onErrorMap(DataApiConflictException::class) { e ->
+            HttpConflictException("Offer is already accepted", e)
+        }.onErrorMap(DataApiNotFoundException::class) { e ->
+            HttpNotFoundException("Offer is already removed", e)
         }
     }
 
@@ -127,7 +149,7 @@ class TaskPageController(
             task.toListViewTaskDTO()
         }.onErrorMap(DataApiBadRequestException::class) { e ->
             HttpBadRequestException("Sorry can't do, please send a valid task data change!", e, e.invalidParams)
-        }.onErrorMap(DataConflictException::class) { e ->
+        }.onErrorMap(DataApiConflictException::class) { e ->
             HttpConflictException("Cannot update this task", e)
         }
     }
@@ -144,7 +166,7 @@ class TaskPageController(
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
-        }.onErrorMap(DataConflictException::class) { e ->
+        }.onErrorMap(DataApiConflictException::class) { e ->
             HttpConflictException("Task already assigned", e)
         }
     }
@@ -160,7 +182,7 @@ class TaskPageController(
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
-        }.onErrorMap(DataConflictException::class) { e ->
+        }.onErrorMap(DataApiConflictException::class) { e ->
             HttpConflictException("Task cannot be started", e)
         }
     }
@@ -179,7 +201,7 @@ class TaskPageController(
             task.toListViewTaskDTO()
         }.onErrorMap(DataApiBadRequestException::class) { e ->
             HttpBadRequestException("Sorry can't do, please send a valid review data!", e, e.invalidParams)
-        }.onErrorMap(DataConflictException::class) { e ->
+        }.onErrorMap(DataApiConflictException::class) { e ->
             HttpConflictException("Cannot add a review just yet!", e)
         }
     }
@@ -198,7 +220,7 @@ class TaskPageController(
             task.toListViewTaskDTO()
         }.onErrorMap(DataApiBadRequestException::class) { e ->
             HttpBadRequestException("Sorry can't do, please send a valid review data!", e, e.invalidParams)
-        }.onErrorMap(DataConflictException::class) { e ->
+        }.onErrorMap(DataApiConflictException::class) { e ->
             HttpConflictException("Cannot add a review just yet!", e)
         }
     }

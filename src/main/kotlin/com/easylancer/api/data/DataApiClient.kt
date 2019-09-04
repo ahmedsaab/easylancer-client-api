@@ -116,7 +116,7 @@ class DataApiClient(
                 .onErrorMap { e -> handleException(request, e) }
     }
 
-    private inline fun <reified T> getEntities(url: String, filter: Map<String, List<String>> = HashMap<String, List<String>>()): Flux<T> {
+    private inline fun <reified T> getEntities(url: String, filter: Map<String, List<String>> = HashMap()): Flux<T> {
         val request = DataRequest(url, HttpMethod.GET);
         val listType = mapper.typeFactory.constructCollectionType(ArrayList::class.java, T::class.java)
 
@@ -175,6 +175,29 @@ class DataApiClient(
                     mapper.treeToValue(dto.data, T::class.java)
                 }
                 .onErrorMap { e ->
+                    handleException(request, e)
+                }
+    }
+
+    private inline fun <reified T> deleteEntities(url: String, filter: Map<String, List<String>> = HashMap()): Flux<T> {
+        val request = DataRequest(url, HttpMethod.DELETE);
+        val listType = mapper.typeFactory.constructCollectionType(ArrayList::class.java, T::class.java)
+
+        return webClient.delete()
+                .uri{
+                    it.path(request.url)
+                            .queryParams(CollectionUtils.toMultiValueMap(filter))
+                            .build()
+                }
+                .retrieve()
+                .onStatus(
+                        { httpStatus -> !httpStatus.is2xxSuccessful },
+                        { response -> transformErrorResponse(request, response) }
+                )
+                .bodyToMono(DataResponseSuccessDTO::class.java)
+                .flatMapIterable { dto ->
+                    mapper.readValue<ArrayList<T>>(dto.data.toString(), listType)
+                }.onErrorMap { e ->
                     handleException(request, e)
                 }
     }
@@ -286,11 +309,15 @@ class DataApiClient(
         return putEntity("/users/$userId", user)
     }
 
-    fun findOneOffer(offer: Map<String, List<String>>): Mono<OfferDTO> {
-        return getEntities<OfferDTO>("/offers", offer).next()
+    fun findOneOffer(query: Map<String, List<String>>): Mono<OfferDTO> {
+        return getEntities<OfferDTO>("/offers", query).next()
     }
 
     fun deleteOffer(id: ObjectId): Mono<OfferDTO> {
         return deleteEntity("/offers/$id")
+    }
+
+    fun deleteOffers(query: Map<String, List<String>>): Flux<OfferDTO> {
+        return deleteEntities("/offers", query)
     }
 }

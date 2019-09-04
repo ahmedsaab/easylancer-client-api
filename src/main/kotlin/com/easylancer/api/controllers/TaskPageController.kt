@@ -119,12 +119,12 @@ class TaskPageController(
     @PostMapping("/{id}/withdraw")
     @PreAuthorize("hasAuthority('task:applied:' + #id)")
     fun withdrawTaskOffer(
-            @PathVariable("id") id: String,
+            @PathVariable("id") id: ObjectId,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<IdViewDTO> {
         val query = HashMap<String, List<String>>()
 
-        query["task"] = listOf(id)
+        query["task"] = listOf(id.toHexString())
         query["workerUser"] = listOf(user.id.toHexString())
 
         return client.findOneOffer(query).flatMap { offer ->
@@ -138,14 +138,20 @@ class TaskPageController(
         }
     }
 
-    @PutMapping("/{id}/edit")
+    @PostMapping("/{id}/edit")
     @PreAuthorize("hasAuthority('task:owner:' + #id)")
     fun updateTask(
             @PathVariable("id") id: ObjectId,
             @RequestBody taskDto: UpdateTaskDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
-        return client.putTask(id, taskDto).map { task ->
+        return client.putTask(id, taskDto).doOnNext {
+            val query = HashMap<String, List<String>>()
+
+            query["task"] = listOf(id.toHexString())
+
+            client.deleteOffers(query).subscribe()
+        }.map { task ->
             task.toListViewTaskDTO()
         }.onErrorMap(DataApiBadRequestException::class) { e ->
             HttpBadRequestException("Sorry can't do, please send a valid task data change!", e, e.invalidParams)
@@ -225,10 +231,21 @@ class TaskPageController(
         }
     }
 
-    // TODO: this is postponed after the release of 0.9.0
     @PostMapping("/{id}/cancel")
-    suspend fun cancelTask(@RequestBody taskBody: CreateTaskDTO) : Unit {
+    @PreAuthorize("hasAuthority('task:owner:' + #id) || hasAuthority('task:worker:' + #id)")
+    fun cancelTask(
+            @PathVariable("id") id: ObjectId,
+            @AuthenticationPrincipal user: UserPrincipal
+    ) : Mono<IdViewDTO> {
+        val body = mapper.createObjectNode()
+                .put("status", "cancelled");
 
-
+        return client.putTask(id, body).map { task ->
+            task.toIdDTO()
+        }.onErrorMap(DataApiConflictException::class) { e ->
+            HttpConflictException("Task cannot be cancelled now", e)
+        }.onErrorMap(DataApiNotFoundException::class) { e ->
+            HttpNotFoundException("Task not found", e)
+        }
     }
 }

@@ -35,6 +35,8 @@ class TaskPageController(
 ) {
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
+    data class ImagesUpdate(val added: Array<String>, val removed: Array<String>) {}
+
     @PostMapping("/create")
     fun createTask(
             @RequestBody taskDto: CreateTaskDTO,
@@ -145,19 +147,41 @@ class TaskPageController(
             @RequestBody taskDto: UpdateTaskDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
-        return client.putTask(id, taskDto).doOnNext {
-            val query = HashMap<String, List<String>>()
+        return (
+            (
+                if (taskDto.imagesUrls != null) {
+                    client.getTask(id).map { oldTask ->
+                        ImagesUpdate(
+                            taskDto.imagesUrls.toList().minus(oldTask.imagesUrls).toTypedArray(),
+                            oldTask.imagesUrls.toList().minus(taskDto.imagesUrls).toTypedArray()
+                        )
+                    }.doOnSuccess {
+                        files.check(it.added).subscribe()
+                    }
+                } else {
+                    Mono.empty()
+                }
+            ).flatMap { imagesUpdate ->
+                client.putTask(id, taskDto).doOnSuccess {
+                    if (taskDto.imagesUrls != null) {
+                        eventEmitter.filesUsed(imagesUpdate.added)
+                        eventEmitter.filesRemoved(imagesUpdate.removed)
+                    }
+                }
+            }.doOnNext {
+                val query = HashMap<String, List<String>>()
 
-            query["task"] = listOf(id.toHexString())
+                query["task"] = listOf(id.toHexString())
 
-            client.deleteOffers(query).subscribe()
-        }.map { task ->
-            task.toListViewTaskDTO()
-        }.onErrorMap(DataApiBadRequestException::class) { e ->
-            HttpBadRequestException("Sorry can't do, please send a valid task data change!", e, e.invalidParams)
-        }.onErrorMap(DataApiConflictException::class) { e ->
-            HttpConflictException("Cannot update this task", e)
-        }
+                client.deleteOffers(query).subscribe()
+            }.map { task ->
+                task.toListViewTaskDTO()
+            }.onErrorMap(DataApiBadRequestException::class) { e ->
+                HttpBadRequestException("Sorry can't do, please send a valid task data change!", e, e.invalidParams)
+            }.onErrorMap(DataApiConflictException::class) { e ->
+                HttpConflictException("Cannot update this task", e)
+            }
+        )
     }
 
     @PostMapping("/{id}/accept")

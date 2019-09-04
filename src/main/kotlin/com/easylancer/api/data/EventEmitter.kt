@@ -17,4 +17,8 @@ class EventEmitter(
     fun filesUsed(urls: Array<String>) {
         filesClient.confirm(urls).subscribe()
     };
+
+    fun filesRemoved(urls: Array<String>) {
+        filesClient.remove(urls).subscribe()
+    };
 }

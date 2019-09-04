@@ -60,4 +60,14 @@ class FilesApiClient(
 
         return post("/update-files", json)
     }
+
+    fun remove(urls: Array<String>): Mono<Unit> {
+        val urlsArray = mapper.createArrayNode();
+        urls.forEach { urlsArray.add(it) }
+        val json = mapper.createObjectNode();
+        json.set("urls", urlsArray)
+        json.put("confirm", false)
+
+        return post("/update-files", json)
+    }
 }

@@ -1,10 +1,12 @@
 package com.easylancer.api.data.dto
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaskRatingDTO(
-        val criteria: RatingCriteriaDTO,
+        val createdAt: Date,
+        val rating: Int,
         val description: String,
         val like: Boolean
 )

@@ -147,26 +147,32 @@ class TaskPageController(
             @RequestBody taskDto: UpdateTaskDTO,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
-        return (
-            (
-                if (taskDto.imagesUrls != null) {
-                    client.getTask(id).map { oldTask ->
-                        ImagesUpdate(
+        val getImagesToUpdateMono = (
+            if (taskDto.imagesUrls != null) {
+                client.getTask(id).map { oldTask ->
+                    ImagesUpdate(
                             taskDto.imagesUrls.toList().minus(oldTask.imagesUrls).toTypedArray(),
                             oldTask.imagesUrls.toList().minus(taskDto.imagesUrls).toTypedArray()
-                        )
-                    }.doOnSuccess {
-                        files.check(it.added).subscribe()
-                    }
-                } else {
-                    Mono.empty()
+                    )
+                }.doOnSuccess {
+                    files.check(it.added).subscribe()
                 }
-            ).flatMap { imagesUpdate ->
-                client.putTask(id, taskDto).doOnSuccess {
-                    if (taskDto.imagesUrls != null) {
-                        eventEmitter.filesUsed(imagesUpdate.added)
-                        eventEmitter.filesRemoved(imagesUpdate.removed)
-                    }
+            } else {
+                Mono.empty()
+            }
+        );
+
+        val updateImages = { images: ImagesUpdate ->
+            if (taskDto.imagesUrls != null) {
+                eventEmitter.filesUsed(images.added)
+                eventEmitter.filesRemoved(images.removed)
+            }
+        }
+
+        return (
+            getImagesToUpdateMono.flatMap { images ->
+                client.putTask(id, taskDto).doOnSuccess{
+                    updateImages(images)
                 }
             }.doOnNext {
                 val query = HashMap<String, List<String>>()

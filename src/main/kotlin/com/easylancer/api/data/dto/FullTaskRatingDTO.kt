@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FullTaskRatingDTO(
         val creatorUser: GeneralUserSummaryDTO,
-        val criteria: RatingCriteriaDTO,
+        val rating: Int,
         val description: String,
         val like: Boolean
 ) {
@@ -22,7 +22,7 @@ data class FullTaskRatingDTO(
                     isApproved = creatorUser.isApproved,
                     id = creatorUser._id.toHexString()
             ),
-            criteria = criteria,
+            rating = rating,
             description = description,
             like = like
     )

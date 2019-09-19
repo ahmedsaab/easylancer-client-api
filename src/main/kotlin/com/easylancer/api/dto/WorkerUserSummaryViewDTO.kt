@@ -1,7 +1,8 @@
 package com.easylancer.api.dto
 
-import com.easylancer.api.data.dto.UserBadgeDTO
-import com.easylancer.api.data.dto.UserTagDTO
+import com.easylancer.api.data.dto.inbound.UserBadgeDTO
+import com.easylancer.api.data.dto.inbound.UserRatingDTO
+import com.easylancer.api.data.dto.inbound.UserTagDTO
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
 @JsonPropertyOrder(alphabetic=true)
@@ -14,5 +15,6 @@ data class WorkerUserSummaryViewDTO(
         val isApproved: Boolean,
         val id: String,
         val badges: Array<UserBadgeDTO>,
-        val tags: Array<UserTagDTO>
+        val tags: Array<UserTagDTO>,
+        val ratings: UserRatingDTO
 )

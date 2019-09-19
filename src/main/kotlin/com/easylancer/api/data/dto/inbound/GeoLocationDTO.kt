@@ -1,4 +1,4 @@
-package com.easylancer.api.data.dto
+package com.easylancer.api.data.dto.inbound
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 

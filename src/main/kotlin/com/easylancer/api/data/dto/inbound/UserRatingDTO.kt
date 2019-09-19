@@ -1,9 +1,9 @@
-package com.easylancer.api.data.dto
+package com.easylancer.api.data.dto.inbound
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class UserRatingDTO(
-        val measure1: String,
-        val measure2: String
+        val value: Int?,
+        val count: Int
 )

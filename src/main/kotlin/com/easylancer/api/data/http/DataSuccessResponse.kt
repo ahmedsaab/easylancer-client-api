@@ -1,6 +1,6 @@
 package com.easylancer.api.data.http
 
-import com.easylancer.api.data.dto.DataResponseSuccessDTO
+import com.easylancer.api.data.dto.inbound.DataResponseSuccessDTO
 import org.springframework.http.HttpStatus
 
 class DataSuccessResponse(

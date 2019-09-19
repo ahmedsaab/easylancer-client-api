@@ -1,7 +1,7 @@
 package com.easylancer.api.dto
 
-import com.easylancer.api.data.dto.TaskLocationDTO
-import com.easylancer.api.data.dto.TaskRatingDTO
+import com.easylancer.api.data.dto.inbound.TaskLocationDTO
+import com.easylancer.api.data.dto.inbound.TaskRatingDTO
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.*
 

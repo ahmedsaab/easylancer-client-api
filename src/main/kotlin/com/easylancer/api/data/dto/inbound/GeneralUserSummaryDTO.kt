@@ -1,12 +1,11 @@
-package com.easylancer.api.data.dto
+package com.easylancer.api.data.dto.inbound
 
 import com.easylancer.api.dto.GeneralUserSummaryViewDTO
-import com.easylancer.api.dto.WorkerUserSummaryViewDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class WorkerUserSummaryDTO(
+data class GeneralUserSummaryDTO(
         val firstName: String?,
         val lastName: String?,
         val imageUrl: String?,
@@ -14,18 +13,16 @@ data class WorkerUserSummaryDTO(
         val likes: Int,
         val isApproved: Boolean,
         val _id: ObjectId,
-        val badges: Array<UserBadgeDTO>,
-        val tags: Array<UserTagDTO>
+        val badges: Array<UserBadgeDTO>
 ) {
-    fun toWorkerUserSummaryViewDTO() = WorkerUserSummaryViewDTO(
-            id = _id.toHexString(),
+    fun toGeneralUserSummaryViewDTO() = GeneralUserSummaryViewDTO(
             firstName = firstName,
             lastName = lastName,
             imageUrl = imageUrl,
-            likes = likes,
             dislikes = dislikes,
+            likes = likes,
             isApproved = isApproved,
-            badges = badges,
-            tags = tags
+            id = _id.toHexString(),
+            badges = badges
     )
 }

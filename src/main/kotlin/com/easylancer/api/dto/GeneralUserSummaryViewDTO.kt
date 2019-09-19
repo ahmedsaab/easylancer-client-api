@@ -1,7 +1,6 @@
 package com.easylancer.api.dto
 
-import com.easylancer.api.data.dto.UserBadgeDTO
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.easylancer.api.data.dto.inbound.UserBadgeDTO
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 
 @JsonPropertyOrder(alphabetic=true)

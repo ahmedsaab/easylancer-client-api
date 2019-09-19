@@ -1,24 +1,24 @@
-package com.easylancer.api.data.dto
+package com.easylancer.api.data.dto.inbound
 
-import com.easylancer.api.dto.IdViewDTO
-import com.easylancer.api.dto.ListViewTaskDTO
+import com.easylancer.api.data.dto.types.TaskStatus
+import com.easylancer.api.dto.CreatedViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TaskDTO(
+data class CreatedTaskDTO(
         val category: String,
         val type: String,
         val paymentMethod: String,
         val description: String,
         val title: String,
-        val workerUser: ObjectId?,
+        val workerUser: WorkerUserSummaryDTO?,
         val creatorUser: ObjectId,
         val price: Int,
         val seenBy: Array<String>,
         val endDateTime: Date?,
-        val status: String,
+        val status: TaskStatus,
         val acceptedOffer: String?,
         val imagesUrls: Array<String>,
         val creatorRating: TaskRatingDTO?,
@@ -27,22 +27,21 @@ data class TaskDTO(
         val startDateTime: Date,
         val location: TaskLocationDTO,
         val createdAt: Date,
-        val tags: Array<String>
+        val tags: Array<String>,
+        val offers: Int
 ) {
-    fun toIdDTO() = IdViewDTO(
-        id = _id.toHexString()
-    )
-    fun toListViewTaskDTO() = ListViewTaskDTO(
-        category = category,
-        type = type,
-        paymentMethod = paymentMethod,
-        title = title,
-        price = price,
-        endDateTime = endDateTime,
-        status = status,
+    fun toView() = CreatedViewTaskDTO(
         id = _id.toHexString(),
-        startDateTime = startDateTime,
+        category = category,
+        createdAt = createdAt,
         location = location,
-        createdAt = createdAt
+        offers = offers,
+        paymentMethod = paymentMethod,
+        price = price,
+        startDateTime = startDateTime,
+        status = status,
+        title = title,
+        type = type,
+        workerUser = workerUser?.toWorkerUserSummaryViewDTO()
     )
 }

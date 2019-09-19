@@ -1,6 +1,7 @@
 package com.easylancer.api.security
 
-import com.easylancer.api.data.dto.UserDTO
+import com.easylancer.api.data.dto.inbound.UserDTO
+import com.easylancer.api.data.dto.types.Role
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.AuthorityUtils
@@ -56,6 +57,11 @@ class UserAuthToken(val user: UserDTO, private val jwt: Jwt): AbstractAuthentica
         }
         user.appliedTasks.forEach { taskId ->
             authorities.add("task:applied:$taskId")
+        }
+        if(user.settings.role == Role.OWNER) {
+            authorities.add("user:creator")
+        } else if (user.settings.role == Role.WORKER) {
+            authorities.add("user:worker")
         }
 
         return authorities

@@ -31,11 +31,4 @@ class AuthController(
     suspend fun signupUser(@RequestBody userDto: CreateUserDTO) : Unit {
 
     }
-
-    @GetMapping("/me")
-    fun getUser(
-            @AuthenticationPrincipal user: UserPrincipal
-    ): Mono<ViewUserDTO> {
-        return Mono.just(user.user).map { it.toViewUserDTO() }
-    }
 }

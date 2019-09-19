@@ -2,7 +2,6 @@ package com.easylancer.api.data.exceptions
 
 import com.easylancer.api.data.http.DataErrorResponse
 import com.easylancer.api.data.http.DataRequest
-import com.easylancer.api.data.dto.DataResponseErrorDTO
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode

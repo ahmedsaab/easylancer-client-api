@@ -1,5 +1,6 @@
-package com.easylancer.api.data.dto
+package com.easylancer.api.data.dto.inbound
 
+import com.easylancer.api.data.dto.types.TaskStatus
 import com.easylancer.api.dto.DetailViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
@@ -19,7 +20,7 @@ data class FullTaskDTO(
         val endDateTime: Date?,
         val creatorRating: TaskRatingDTO?,
         val workerRating: TaskRatingDTO?,
-        val status: String,
+        val status: TaskStatus,
         val acceptedOffer: ObjectId?,
         val imagesUrls: Array<String>,
         val _id: ObjectId,
@@ -41,7 +42,7 @@ data class FullTaskDTO(
         endDateTime = endDateTime,
         creatorRating = creatorRating,
         workerRating = workerRating,
-        status = status,
+        status = status.displayName,
         acceptedOffer = acceptedOffer?.toHexString(),
         imagesUrls = imagesUrls,
         id = _id.toHexString(),
@@ -64,7 +65,7 @@ data class FullTaskDTO(
         endDateTime = endDateTime,
         creatorRating = creatorRating,
         workerRating = workerRating,
-        status = status,
+        status = status.displayName,
         acceptedOffer = acceptedOffer?.toHexString(),
         imagesUrls = imagesUrls,
         id = _id.toHexString(),
@@ -87,7 +88,7 @@ data class FullTaskDTO(
         endDateTime = endDateTime,
         creatorRating = creatorRating,
         workerRating = workerRating,
-        status = status,
+        status = status.displayName,
         acceptedOffer = null,
         imagesUrls = imagesUrls,
         id = _id.toHexString(),

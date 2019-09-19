@@ -1,6 +1,6 @@
 package com.easylancer.api.dto
 
-import com.easylancer.api.data.dto.UserSettingsDTO
+import com.easylancer.api.data.dto.inbound.UserSettingsDTO
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.*

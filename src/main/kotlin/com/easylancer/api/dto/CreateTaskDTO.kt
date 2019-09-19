@@ -1,6 +1,6 @@
 package com.easylancer.api.dto
 
-import com.easylancer.api.data.dto.TaskLocationDTO
+import com.easylancer.api.data.dto.inbound.TaskLocationDTO
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude

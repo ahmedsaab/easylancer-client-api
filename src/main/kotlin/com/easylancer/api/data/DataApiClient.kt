@@ -1,11 +1,17 @@
 package com.easylancer.api.data
 
-import com.easylancer.api.data.dto.*
+import com.easylancer.api.data.dto.outbound.EqualFilter
+import com.easylancer.api.data.dto.outbound.Query
+import com.easylancer.api.data.dto.outbound.Search
+import com.easylancer.api.data.dto.inbound.*
+import com.easylancer.api.data.dto.outbound.NotEqualFilter
+import com.easylancer.api.data.dto.types.TaskStatus
 import com.easylancer.api.data.http.DataRequest
 import com.easylancer.api.data.http.DataErrorResponse
 import com.easylancer.api.data.exceptions.*
 import com.easylancer.api.data.http.DataUnexpectedErrorResponse
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -14,7 +20,6 @@ import org.bson.types.ObjectId
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpMethod
 import org.springframework.util.CollectionUtils
-import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
@@ -60,7 +65,7 @@ class DataApiClient(
                 } else e
             is JsonProcessingException ->
                 return DataApiUnexpectedResponseException(
-                        message = "Failed to parse success response body",
+                        message = "Failed to parse success response body, ${e.message}",
                         request = req,
                         response = DataUnexpectedErrorResponse(200, null),
                         cause = e
@@ -139,7 +144,7 @@ class DataApiClient(
             }
     }
 
-    private inline fun <reified T> postEntity(url: String, entity: Any): Mono<T> {
+    private inline fun <reified T> postEntity(url: String, entity: Any, type: JavaType? = null): Mono<T> {
         val reqBody = mapper.valueToTree<JsonNode>(entity)
         val request = DataRequest(url, HttpMethod.POST, reqBody);
 
@@ -153,7 +158,11 @@ class DataApiClient(
                 )
                 .bodyToMono(DataResponseSuccessDTO::class.java)
                 .map { dto ->
-                    mapper.treeToValue(dto.data, T::class.java)
+                    if(type == null)
+                        mapper.readValue(dto.data.toString(), T::class.java)
+                    else
+                        mapper.readValue(dto.data.toString(), type) as T
+
                 }
                 .onErrorMap { e ->
                     handleException(request, e)
@@ -267,6 +276,41 @@ class DataApiClient(
 
     fun getUserCreatedTasks(id: ObjectId): Flux<TaskDTO> {
         return getEntities("/users/$id/tasks/created")
+    }
+
+    fun searchUserCreatedTasks(
+        id: ObjectId,
+        status: TaskStatus,
+        pageNo: Int,
+        pageSize: Int
+    ): Mono<PaginationDTO<CreatedTaskDTO>> {
+        val query = Query()
+            .filter("status",  EqualFilter(status.toString()))
+
+        return postEntity(
+            "/users/$id/tasks/created",
+            Search(pageNo, pageSize, query.toJson()),
+            mapper.typeFactory.constructParametricType(
+                PaginationDTO::class.java,
+                CreatedTaskDTO::class.java
+            )
+        )
+    }
+
+    fun searchUserAppliedTasks(
+            id: ObjectId,
+            query: Query,
+            pageNo: Int,
+            pageSize: Int
+    ): Mono<PaginationDTO<AppliedTaskDTO>> {
+        return postEntity(
+            "/users/$id/tasks/applied",
+            Search(pageNo, pageSize, query.toJson()),
+            mapper.typeFactory.constructParametricType(
+                PaginationDTO::class.java,
+                AppliedTaskDTO::class.java
+            )
+        )
     }
 
     fun getUserRelatedTasks(id: ObjectId): Flux<TaskDTO> {

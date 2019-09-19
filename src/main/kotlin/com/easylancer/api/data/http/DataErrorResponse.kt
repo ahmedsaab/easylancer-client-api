@@ -1,6 +1,6 @@
 package com.easylancer.api.data.http
 
-import com.easylancer.api.data.dto.DataResponseErrorDTO
+import com.easylancer.api.data.dto.inbound.DataResponseErrorDTO
 
 class DataErrorResponse(
         statusCode: Int,

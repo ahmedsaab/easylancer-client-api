@@ -1,12 +1,13 @@
-package com.easylancer.api.data.dto
+package com.easylancer.api.data.dto.inbound
 
-import com.easylancer.api.dto.SearchViewTaskDTO
+import com.easylancer.api.data.dto.types.TaskStatus
+import com.easylancer.api.dto.AppliedViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
 import java.util.*
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class SearchTaskDTO(
+data class AppliedTaskDTO(
         val category: String,
         val type: String,
         val paymentMethod: String,
@@ -17,7 +18,7 @@ data class SearchTaskDTO(
         val price: Int,
         val seenBy: Array<String>,
         val endDateTime: Date?,
-        val status: String,
+        val status: TaskStatus,
         val acceptedOffer: String?,
         val imagesUrls: Array<String>,
         val creatorRating: TaskRatingDTO?,
@@ -25,21 +26,22 @@ data class SearchTaskDTO(
         val _id: ObjectId,
         val startDateTime: Date,
         val location: TaskLocationDTO,
-        val createdAt: Date
+        val createdAt: Date,
+        val tags: Array<String>,
+        val offer: OfferDTO
 ) {
-    fun toSearchViewTaskDTO() = SearchViewTaskDTO(
-        category = category,
-        type = type,
-        paymentMethod = paymentMethod,
-        title = title,
-        price = price,
-        endDateTime = endDateTime,
-        status = status,
+    fun toView() = AppliedViewTaskDTO(
         id = _id.toHexString(),
-        startDateTime = startDateTime,
-        location = location,
+        category = category,
         createdAt = createdAt,
-        creatorUser = creatorUser.toGeneralUserSummaryViewDTO(),
-        imagesUrls = imagesUrls
+        location = location,
+        offer = offer.toOfferSummaryViewDTO(),
+        paymentMethod = paymentMethod,
+        price = price,
+        startDateTime = startDateTime,
+        status = status,
+        title = title,
+        type = type,
+        creatorUser = creatorUser.toGeneralUserSummaryViewDTO()
     )
 }

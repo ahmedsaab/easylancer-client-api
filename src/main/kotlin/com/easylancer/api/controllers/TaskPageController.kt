@@ -2,6 +2,7 @@ package com.easylancer.api.controllers
 
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.DataApiClient
+import com.easylancer.api.data.dto.types.TaskStatus
 import com.easylancer.api.data.exceptions.DataApiBadRequestException
 import com.easylancer.api.data.exceptions.DataApiNotFoundException
 import com.easylancer.api.data.exceptions.DataApiConflictException
@@ -214,7 +215,7 @@ class TaskPageController(
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<ListViewTaskDTO> {
         val body = mapper.createObjectNode()
-                .put("status", "in-progress");
+                .put("status", TaskStatus.IN_PROGRESS.toString());
 
         return client.putTask(id, body).map { task ->
             task.toListViewTaskDTO()
@@ -268,7 +269,7 @@ class TaskPageController(
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<IdViewDTO> {
         val body = mapper.createObjectNode()
-                .put("status", "cancelled");
+                .put("status", TaskStatus.CANCELLED.toString());
 
         return client.putTask(id, body).map { task ->
             task.toIdDTO()

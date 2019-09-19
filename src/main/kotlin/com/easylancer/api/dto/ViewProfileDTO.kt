@@ -1,8 +1,8 @@
 package com.easylancer.api.dto
 
-import com.easylancer.api.data.dto.UserBadgeDTO
-import com.easylancer.api.data.dto.UserRatingDTO
-import com.easylancer.api.data.dto.UserTagDTO
+import com.easylancer.api.data.dto.inbound.UserBadgeDTO
+import com.easylancer.api.data.dto.inbound.UserRatingDTO
+import com.easylancer.api.data.dto.inbound.UserTagDTO
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import java.util.*

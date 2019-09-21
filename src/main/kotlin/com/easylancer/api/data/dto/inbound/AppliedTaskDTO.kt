@@ -42,6 +42,7 @@ data class AppliedTaskDTO(
         status = status,
         title = title,
         type = type,
-        creatorUser = creatorUser.toGeneralUserSummaryViewDTO()
+        creatorUser = creatorUser.toGeneralUserSummaryViewDTO(),
+        tags = tags
     )
 }

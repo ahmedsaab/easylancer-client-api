@@ -13,6 +13,7 @@ data class AppliedViewTaskDTO(
         val price: Int,
         val status: TaskStatus,
         val id: String,
+        val tags: Array<String>,
         val startDateTime: Date,
         val location: TaskLocationDTO,
         val createdAt: Date,

@@ -42,6 +42,7 @@ data class CreatedTaskDTO(
         status = status,
         title = title,
         type = type,
-        workerUser = workerUser?.toWorkerUserSummaryViewDTO()
+        workerUser = workerUser?.toWorkerUserSummaryViewDTO(),
+        tags = tags
     )
 }

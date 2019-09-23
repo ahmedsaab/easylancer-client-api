@@ -7,7 +7,8 @@ enum class TaskStatus(val displayName: String) {
     IN_PROGRESS("in-progress"),
     INVESTIGATE("investigate"),
     OPEN("open"),
-    PENDING_REVIEW("pending-review"),
+    PENDING_WORKER_REVIEW("pending-worker-review"),
+    PENDING_OWNER_REVIEW("pending-owner-review"),
     CANCELLED("cancelled");
 }
 

@@ -79,7 +79,7 @@ class MyOrdersPageController(
         val query = Query()
             .filter("status",  EqualFilter(TaskStatus.OPEN))
 
-        return getAppliedTasks(user.id, query, pageNo, 1)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/applied/history")
@@ -91,7 +91,7 @@ class MyOrdersPageController(
             .filter("status",  NotEqualFilter(TaskStatus.OPEN))
             .filter("workerUser",  NotEqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/started")
@@ -103,7 +103,7 @@ class MyOrdersPageController(
             .filter("status",  EqualFilter(TaskStatus.IN_PROGRESS))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/pending-worker-review")
@@ -112,10 +112,10 @@ class MyOrdersPageController(
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<AppliedViewTaskDTO>> {
         val query = Query()
-            .filter("status",  EqualFilter(TaskStatus.PENDING_REVIEW))
+            .filter("status",  EqualFilter(TaskStatus.PENDING_WORKER_REVIEW))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/scheduled")
@@ -127,7 +127,7 @@ class MyOrdersPageController(
             .filter("status",  EqualFilter(TaskStatus.ASSIGNED))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/done")
@@ -139,7 +139,7 @@ class MyOrdersPageController(
             .filter("status",  EqualFilter(TaskStatus.DONE))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/not-done")
@@ -151,7 +151,7 @@ class MyOrdersPageController(
             .filter("status",  EqualFilter(TaskStatus.NOT_DONE))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/pending-owner-review")
@@ -160,10 +160,10 @@ class MyOrdersPageController(
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<AppliedViewTaskDTO>> {
         val query = Query()
-            .filter("status",  EqualFilter(TaskStatus.PENDING_REVIEW))
+            .filter("status",  EqualFilter(TaskStatus.PENDING_OWNER_REVIEW))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/investigate")
@@ -175,7 +175,7 @@ class MyOrdersPageController(
             .filter("status",  EqualFilter(TaskStatus.INVESTIGATE))
             .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
     @GetMapping("/assigned/cancelled")
@@ -187,7 +187,7 @@ class MyOrdersPageController(
                 .filter("status",  EqualFilter(TaskStatus.CANCELLED))
                 .filter("workerUser",  EqualFilter(user.id.toHexString()))
 
-        return getAppliedTasks(user.id, query, pageNo, 100)
+        return getAppliedTasks(user.id, query, pageNo, 3)
     }
 
 
@@ -196,7 +196,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.OPEN, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.OPEN, pageNo, 3)
     }
 
     @GetMapping("/created/cancelled")
@@ -204,7 +204,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.CANCELLED, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.CANCELLED, pageNo, 3)
     }
 
     @GetMapping("/created/started")
@@ -212,7 +212,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.IN_PROGRESS, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.IN_PROGRESS, pageNo, 3)
     }
 
     @GetMapping("/created/pending-owner-review")
@@ -220,7 +220,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.PENDING_REVIEW, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.PENDING_OWNER_REVIEW, pageNo, 3)
     }
 
     @GetMapping("/created/scheduled")
@@ -228,7 +228,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.ASSIGNED, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.ASSIGNED, pageNo, 3)
     }
 
     @GetMapping("/created/pending-worker-review")
@@ -236,7 +236,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.PENDING_REVIEW, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.PENDING_WORKER_REVIEW, pageNo, 3)
     }
 
     @GetMapping("/created/done")
@@ -244,7 +244,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.DONE, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.DONE, pageNo, 3)
     }
 
     @GetMapping("/created/not-done")
@@ -252,7 +252,7 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.NOT_DONE, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.NOT_DONE, pageNo, 3)
     }
 
     @GetMapping("/created/investigate")
@@ -260,6 +260,6 @@ class MyOrdersPageController(
             @RequestParam("page") pageNo: Int = 1,
             @AuthenticationPrincipal user: UserPrincipal
     ) : Mono<PaginationViewDTO<CreatedViewTaskDTO>> {
-        return getCreatedTasks(user.id, TaskStatus.INVESTIGATE, pageNo, 100)
+        return getCreatedTasks(user.id, TaskStatus.INVESTIGATE, pageNo, 3)
     }
 }

@@ -42,7 +42,7 @@ class FilesApiClient(
     }
 
 
-    fun check(urls: Array<String>): Mono<Unit> {
+    fun check(urls: List<String>): Mono<Unit> {
         val urlsArray = mapper.createArrayNode();
         urls.forEach { urlsArray.add(it) }
         val json = mapper.createObjectNode();
@@ -51,7 +51,7 @@ class FilesApiClient(
         return post("/update-files", json)
     }
 
-    fun confirm(urls: Array<String>): Mono<Unit> {
+    fun confirm(urls: List<String>): Mono<Unit> {
         val urlsArray = mapper.createArrayNode();
         urls.forEach { urlsArray.add(it) }
         val json = mapper.createObjectNode();
@@ -61,7 +61,7 @@ class FilesApiClient(
         return post("/update-files", json)
     }
 
-    fun remove(urls: Array<String>): Mono<Unit> {
+    fun remove(urls: List<String>): Mono<Unit> {
         val urlsArray = mapper.createArrayNode();
         urls.forEach { urlsArray.add(it) }
         val json = mapper.createObjectNode();

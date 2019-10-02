@@ -13,10 +13,10 @@ data class UpdateTaskDTO(
         val description: String?,
         val title: String?,
         @JsonFormat(shape= JsonFormat.Shape.NUMBER_INT)
-    val price: Int?,
+        val price: Int?,
         val imagesUrls: Array<String>?,
         @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone="UTC")
-    val startDateTime: Date?,
+        val startDateTime: Date?,
         val location: TaskLocationDTO?,
         val tags: Array<String>?
 )

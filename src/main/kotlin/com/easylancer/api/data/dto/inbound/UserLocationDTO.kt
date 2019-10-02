@@ -1,9 +1,9 @@
 package com.easylancer.api.data.dto.inbound
 
-import com.easylancer.api.data.dto.types.Role
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class UserSettingsDTO(
-        val role: Role?
+data class UserLocationDTO(
+        val country: String?,
+        val city: String?
 )

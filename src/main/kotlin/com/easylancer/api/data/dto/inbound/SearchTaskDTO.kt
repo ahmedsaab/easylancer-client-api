@@ -26,7 +26,8 @@ data class SearchTaskDTO(
         val _id: ObjectId,
         val startDateTime: Date,
         val location: TaskLocationDTO,
-        val createdAt: Date
+        val createdAt: Date,
+        val tags: Array<String>
 ) {
     fun toSearchViewTaskDTO() = SearchViewTaskDTO(
         category = category,
@@ -41,6 +42,7 @@ data class SearchTaskDTO(
         location = location,
         createdAt = createdAt,
         creatorUser = creatorUser.toGeneralUserSummaryViewDTO(),
-        imagesUrls = imagesUrls
+        imagesUrls = imagesUrls,
+        tags = tags
     )
 }

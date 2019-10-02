@@ -14,11 +14,11 @@ class EventEmitter(
         dataClient.taskSeenBy(id, userId).subscribe()
     };
 
-    fun filesUsed(urls: Array<String>) {
+    fun filesUsed(urls: List<String>) {
         filesClient.confirm(urls).subscribe()
     };
 
-    fun filesRemoved(urls: Array<String>) {
+    fun filesRemoved(urls: List<String>) {
         filesClient.remove(urls).subscribe()
     };
 }

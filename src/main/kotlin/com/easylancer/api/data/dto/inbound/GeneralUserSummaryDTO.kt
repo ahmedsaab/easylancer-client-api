@@ -9,8 +9,7 @@ data class GeneralUserSummaryDTO(
         val firstName: String?,
         val lastName: String?,
         val imageUrl: String?,
-        val dislikes: Int,
-        val likes: Int,
+        val ratings: UserRatingsDTO,
         val isApproved: Boolean,
         val _id: ObjectId,
         val badges: Array<UserBadgeDTO>
@@ -19,8 +18,7 @@ data class GeneralUserSummaryDTO(
             firstName = firstName,
             lastName = lastName,
             imageUrl = imageUrl,
-            dislikes = dislikes,
-            likes = likes,
+            ratings = ratings,
             isApproved = isApproved,
             id = _id.toHexString(),
             badges = badges

@@ -13,7 +13,7 @@ enum class TaskStatus(val displayName: String) {
 }
 
 val FINISHED_STATUSES =
-        listOf(TaskStatus.DONE, TaskStatus.NOT_DONE, TaskStatus.INVESTIGATE)
+        listOf(TaskStatus.DONE, TaskStatus.NOT_DONE, TaskStatus.INVESTIGATE, TaskStatus.CANCELLED)
 
 val ASSIGNED_STATUSES =
         listOf(TaskStatus.IN_PROGRESS, TaskStatus.ASSIGNED)

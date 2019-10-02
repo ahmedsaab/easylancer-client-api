@@ -278,6 +278,21 @@ class DataApiClient(
         return getEntities("/users/$id/tasks/created")
     }
 
+    fun searchTasks(
+        query: Query,
+        pageNo: Int,
+        pageSize: Int
+    ): Mono<PaginationDTO<FullTaskDTO>> {
+        return postEntity(
+            "/tasks/search2",
+            Search(pageNo, pageSize, query.toJson()),
+            mapper.typeFactory.constructParametricType(
+                PaginationDTO::class.java,
+                FullTaskDTO::class.java
+            )
+        )
+    }
+
     fun searchUserCreatedTasks(
         id: ObjectId,
         status: TaskStatus,

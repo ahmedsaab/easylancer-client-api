@@ -1,5 +1,6 @@
 package com.easylancer.api.controllers
 
+import com.easylancer.api.controllers.data.ImagesUpdate
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.DataApiClient
 import com.easylancer.api.data.dto.types.TaskStatus
@@ -36,8 +37,6 @@ class TaskPageController(
 ) {
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
-    data class ImagesUpdate(val added: Array<String>, val removed: Array<String>) {}
-
     @PostMapping("/create")
     fun createTask(
             @RequestBody taskDto: CreateTaskDTO,
@@ -47,10 +46,10 @@ class TaskPageController(
                 .put("creatorUser", user.id.toHexString())
 
         return (
-            files.check(taskDto.imagesUrls)
+            files.check(taskDto.imagesUrls.toList())
                 .then(client.postTask(taskBody))
                 .doOnSuccess {
-                    eventEmitter.filesUsed(taskDto.imagesUrls)
+                    eventEmitter.filesUsed(taskDto.imagesUrls.toList())
                 }
                 .map { task ->
                     task.toListViewTaskDTO()
@@ -152,8 +151,8 @@ class TaskPageController(
             if (taskDto.imagesUrls != null) {
                 client.getTask(id).map { oldTask ->
                     ImagesUpdate(
-                            taskDto.imagesUrls.toList().minus(oldTask.imagesUrls).toTypedArray(),
-                            oldTask.imagesUrls.toList().minus(taskDto.imagesUrls).toTypedArray()
+                        taskDto.imagesUrls.toList().minus(oldTask.imagesUrls),
+                        oldTask.imagesUrls.toList().minus(taskDto.imagesUrls)
                     )
                 }.doOnSuccess {
                     files.check(it.added).subscribe()

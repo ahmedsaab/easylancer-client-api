@@ -1,5 +1,6 @@
 package com.easylancer.api.data.dto.inbound
 
+import com.easylancer.api.data.dto.types.FINISHED_STATUSES
 import com.easylancer.api.data.dto.types.TaskStatus
 import com.easylancer.api.dto.DetailViewTaskDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
@@ -81,7 +82,7 @@ data class FullTaskDTO(
         paymentMethod = paymentMethod,
         description = description,
         title = title,
-        workerUser = null,
+        workerUser = if(FINISHED_STATUSES.contains(status)) workerUser?.toGeneralUserSummaryViewDTO() else null,
         creatorUser = creatorUser.toGeneralUserSummaryViewDTO(),
         price = price,
         seenCount = seenBy.size,

@@ -20,7 +20,7 @@ class GeneralConfig(
         @Autowired private val dataApiConfig: DataApiConfig,
         @Autowired private val filesApiConfig: FilesApiConfig
 ) {
-    val dataApiUrl = "${dataApiConfig.url}:${dataApiConfig.port}"
+    val dataApiUrl = dataApiConfig.url
     val filesApiUrl = filesApiConfig.url
 
     @Bean

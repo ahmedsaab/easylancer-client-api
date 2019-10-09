@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 
 @Component
 @ConfigurationProperties("data.api")
-data class DataApiConfig(var url: String = "http://localhost", var port: Int = 3000)
+data class DataApiConfig(var url: String = "http://localhost:3000")
 
 @Component
 @ConfigurationProperties("files.api")

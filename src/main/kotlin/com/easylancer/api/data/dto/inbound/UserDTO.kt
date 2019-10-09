@@ -2,6 +2,7 @@ package com.easylancer.api.data.dto.inbound
 
 import com.easylancer.api.exceptions.runtime.TransformationException
 import com.easylancer.api.dto.ViewProfileDTO
+import com.easylancer.api.dto.ViewSettingsDTO
 import com.easylancer.api.dto.ViewUserDTO
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.bson.types.ObjectId
@@ -62,5 +63,16 @@ data class UserDTO(
         birthDate = birthDate,
         phoneNumber = phoneNumber,
         settings = settings
+    )
+    fun toViewSettingsDTO() = ViewSettingsDTO(
+        lastName = lastName ?: throw TransformationException("lastName of user is null"),
+        firstName = firstName ?: throw TransformationException("firstName of user is null"),
+        gender = gender,
+        id = _id.toHexString(),
+        birthDate = birthDate,
+        phoneNumber = phoneNumber,
+        settings = settings,
+        location = location,
+        isApproved = isApproved
     )
 }

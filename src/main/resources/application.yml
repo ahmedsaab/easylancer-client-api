@@ -27,8 +27,7 @@ logging:
 
 data:
   api:
-    server: http://localhost
-    port: 3003
+    url: http://localhost:3003
 
 files:
   api:

@@ -10,6 +10,7 @@ import com.easylancer.api.data.http.DataRequest
 import com.easylancer.api.data.http.DataErrorResponse
 import com.easylancer.api.data.exceptions.*
 import com.easylancer.api.data.http.DataUnexpectedErrorResponse
+import com.easylancer.api.exceptions.http.HttpNotFoundException
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.JsonNode
@@ -25,6 +26,7 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.lang.Exception
 import java.net.ConnectException
 import java.util.ArrayList
 
@@ -80,7 +82,7 @@ class DataApiClient(
 //                DataApiNotFoundException("No entity found with this filter")
             else ->
                 return DataApiUnhandledException(
-                    message = "Unhandled exception occurred",
+                    message = "Unhandled exception occurred. ${e.message}",
                     request = req,
                     cause = e
                 )
@@ -117,8 +119,13 @@ class DataApiClient(
                 .bodyToMono(JsonNode::class.java)
                 .map { body -> mapper.treeToValue(body, DataResponseSuccessDTO::class.java) }
                 .map { dto -> mapper.readValue<ArrayList<T>>(dto.data.toString(), listType) }
-                .map { array -> array[0] }
-                .onErrorMap { e -> handleException(request, e) }
+                .map { array ->
+                    if (array.size == 0) {
+                        throw Exception("No entity found matching the search")
+                    } else {
+                        array[0]
+                    }
+                }.onErrorMap { e -> handleException(request, e) }
     }
 
     private inline fun <reified T> getEntities(url: String, filter: Map<String, List<String>> = HashMap()): Flux<T> {

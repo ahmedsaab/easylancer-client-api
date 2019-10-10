@@ -3,6 +3,7 @@ package com.easylancer.api.controllers
 import com.easylancer.api.data.EventEmitter
 import com.easylancer.api.data.DataApiClient
 import com.easylancer.api.dto.*
+import com.easylancer.api.helpers.toJson
 import com.easylancer.api.security.UserPrincipal
 
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,13 +23,8 @@ class AuthController(
 ) {
     private var mapper: ObjectMapper = jacksonObjectMapper();
 
-    @GetMapping("/login")
-    suspend fun loginUser(@RequestParam params: Map<String,String>): Map<String,String> {
-        return params
-    }
-
     @PostMapping("/sign-up")
-    suspend fun signupUser(@RequestBody userDto: CreateUserDTO) : Unit {
-
+    fun signupUser(@RequestBody userDto: CreateUserDTO) : Mono<ViewUserDTO> {
+        return client.postUser(userDto.toJson()).map { user -> user.toViewUserDTO() }
     }
 }

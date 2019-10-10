@@ -54,6 +54,8 @@ class SecurityConfig(
                     .permitAll()
                 .pathMatchers("/auth/**")
                     .permitAll()
+                .pathMatchers(HttpMethod.OPTIONS, "/**")
+                    .permitAll()
                 .pathMatchers("/profiles/**")
                     .hasRole(UserRole.USER.name)
                 .pathMatchers("/tasks/**")

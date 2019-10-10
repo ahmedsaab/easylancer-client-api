@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = false)
 data class CreateUserDTO(
-        val email: String,
+        val auth: String,
         val firstName: String,
         val lastName: String,
-        val password: String
+        val imageUrl: String?
 )

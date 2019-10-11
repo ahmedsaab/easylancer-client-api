@@ -16,14 +16,8 @@ spring:
       resourceserver:
         jwk:
           issuer-uri: https://easylancer.eu.auth0.com/
-
-logging:
-  level:
-    org:
-      springframework:
-        web:
-          filter:
-            CommonsRequestLoggingFilter: "ERROR"
+  profiles:
+    active: dev
 
 data:
   api:

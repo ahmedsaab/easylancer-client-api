@@ -4,14 +4,7 @@
     <property name="LOGS" value="./logs" />
 
     <appender name="json" class="ch.qos.logback.core.ConsoleAppender">
-        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
-            <jsonFormatter
-                    class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
-                <prettyPrint>true</prettyPrint>
-            </jsonFormatter>
-            <appendLineSeparator>true</appendLineSeparator>
-            <timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
-        </layout>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
 
     <appender name="simple" class="ch.qos.logback.core.ConsoleAppender">
@@ -22,52 +15,26 @@
         </layout>
     </appender>
 
-
-    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOGS}/easylancer.log</file>
-        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
-            <jsonFormatter
-                    class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
-                <prettyPrint>false</prettyPrint>
-            </jsonFormatter>
-            <appendLineSeparator>true</appendLineSeparator>
-            <timestampFormat>yyyy-MM-dd' 'HH:mm:ss.SSS</timestampFormat>
-        </layout>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily and when the file reaches 10 MegaBytes -->
-            <fileNamePattern>${LOGS}/archived/easylancer-%d{yyyy-MM-dd}.%i.log
-            </fileNamePattern>
+            <fileNamePattern>${LOGS}/archived/easylancer-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
 
-    <logger name="simple-logger" level="info">
-        <appender-ref ref="simple" />
-    </logger>
-
     <root level="debug">
-        <appender-ref ref="simple" />
+        <springProfile name="!prod">
+            <appender-ref ref="simple" />
+        </springProfile>
+        <springProfile name="prod">
+            <appender-ref ref="json" />
+        </springProfile>
     </root>
-
-
-<!--    <logger name="infoLogger" level="debug">-->
-<!--        <appender-ref ref="json" />-->
-<!--    </logger>-->
-
-<!--    <logger name="errorLogger" level="error">-->
-<!--        <appender-ref ref="json" />-->
-<!--    </logger>-->
-
-<!--    <root level="error">-->
-<!--        <appender-ref ref="simple" />-->
-<!--    </root>-->
-
-<!--    <logger name="org.springframework.web.filter.CommonsRequestLoggingFilter">-->
-<!--        <level value="DEBUG" />-->
-<!--    </logger>-->
-
 
 </configuration>

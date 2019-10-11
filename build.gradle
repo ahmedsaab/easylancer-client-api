@@ -27,6 +27,7 @@ dependencies {
 
     compile "ch.qos.logback.contrib:logback-json-classic:0.1.5"
     compile "ch.qos.logback.contrib:logback-jackson:0.1.5"
+    compile group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '6.2'
     compile group: 'org.mongodb', name: 'bson', version: '3.11.0-beta3'
     compile group: 'org.springframework.data', name: 'spring-data-commons-core', version: '1.4.1.RELEASE'
 

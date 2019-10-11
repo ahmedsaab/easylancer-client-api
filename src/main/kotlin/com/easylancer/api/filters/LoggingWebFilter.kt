@@ -2,6 +2,8 @@ package com.easylancer.api.filters
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import net.logstash.logback.argument.StructuredArguments.kv
+import net.logstash.logback.encoder.org.apache.commons.lang3.exception.ExceptionUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.web.server.ServerWebExchange
@@ -9,15 +11,14 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
-//@Component
 class LoggingWebFilter : WebFilter {
-   private val logger: Logger = LoggerFactory.getLogger("simple-logger")
+   private val logger: Logger = LoggerFactory.getLogger("Http")
 
     // TODO: create a data class for the log object
     private fun createLogJson(exchange: ServerWebExchange) : JsonNode {
-        val log = jacksonObjectMapper().createObjectNode();
-        val request = jacksonObjectMapper().createObjectNode();
-        val response = jacksonObjectMapper().createObjectNode();
+        val log = jacksonObjectMapper().createObjectNode()
+        val request = jacksonObjectMapper().createObjectNode()
+        val response = jacksonObjectMapper().createObjectNode()
 
         val executionTime = exchange.attributes["execution-time"] as Long?
         val exception = exchange.attributes["exception"] as Throwable?
@@ -45,35 +46,12 @@ class LoggingWebFilter : WebFilter {
         log.set("request", request)
         log.set("response", response)
         if (exception != null) {
-            log.put("exception", exception.javaClass.simpleName)
-        }
+            val error = jacksonObjectMapper().createObjectNode()
 
-        return log
-    }
-
-    // TODO: create a data class for the log object
-    private fun createDevLogJson(exchange: ServerWebExchange) : JsonNode {
-        val log = jacksonObjectMapper().createObjectNode();
-
-        val executionTime = exchange.attributes["execution-time"] as Long?
-        val exception = exchange.attributes["exception"] as Throwable?
-        val responseBody = exchange.attributes["response-body-json"] as JsonNode?
-
-        val statusCode = exchange.response.statusCode?.value()
-        val url = exchange.request.uri.toString()
-
-        log.put("statusCode", statusCode)
-        log.put("url", url)
-        log.set("body", responseBody)
-        log.put("time", executionTime)
-
-        if (exception != null) {
-            val ex = jacksonObjectMapper().createObjectNode();
-
-            ex.put("className", exception.javaClass.simpleName)
-            ex.put("message", exception.message)
-
-            log.set("exception", ex)
+            error.put("name", exception.javaClass.simpleName)
+            error.put("message", exception.message)
+            error.put("stacktrace", ExceptionUtils.getStackTrace(exception))
+            log.set("exception", error)
         }
 
         return log
@@ -84,7 +62,7 @@ class LoggingWebFilter : WebFilter {
 
         return chain.filter(decorateWithBodyLoaders(exchange)).doFinally {
             exchange.attributes["execution-time"] = System.currentTimeMillis() - startTime
-            logger.info(createLogJson(exchange).toString())
+            logger.info("http request processed", kv("exchange", createLogJson(exchange)))
         }
     }
 }

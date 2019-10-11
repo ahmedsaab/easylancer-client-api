@@ -1,6 +1,5 @@
 package com.easylancer.api.config
 
-
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.*
 import org.springframework.http.HttpHeaders
